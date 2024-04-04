@@ -1,9 +1,12 @@
 import express from "express";
 import createError from "http-errors";
+import requestTime from "./middleware/request-time.js";
 import rootRoutes from "./routes/root.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(requestTime);
 
 app.use("/", rootRoutes);
 
