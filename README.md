@@ -1,3 +1,78 @@
+### Setting up migrations
+
+Let's say John and Sally are working on a project in their _separate and distinct_ development environments. John is tasked with setting the users database interactions, and Sally is tasked with setting up the game database interactions. John will create a `users` table in their local database, and Sally will create a `games` table in their local database.
+
+Sally will not have the `users` table, and John will not have the `games` table. Migrations are a tool that allow us to specify changes to the structure of the database (for example, adding a table) _in our codebase_, so that when John pulls the code that Sally wrote, John can run the migrations to automatically add the table that Sally created (and vice versa). Migrations also allow us to make incremental changes to the database structure and, similar to version control with github, we can incrementally revert (rollback) or apply database changes.
+
+Migrations will be managed with the `node-pg-migrate` and `pg` packages:
+
+```
+npm install node-pg-migrate pg
+```
+
+So that we don't need to remember the commands for migration, add these scripts to [`package.json`](./package.json):
+
+```json
+"db:create": "node-pg-migrate create -- ",
+"db:migrate": "node-pg-migrate up",
+"db:rollback": "node-pg-migrate down"
+```
+
+Create a migration to test our connection - this will create a `migrations` folder, and put a file named [`TIMESTAMP_test-migration.js`](/migrations/1712262572600_test-migration.js) into that directory (the timestamp is important; don't change the name of this file!). Since we are using ES6 modules, we _do_ need to change the extension of the file to `cjs` after it is created.
+
+```
+npm run db:create test migration
+```
+
+You can just copy the contents of the copy in this repository into your migration. Notice that there are two separate functions that are exported - `up` to apply a change to the database (in this case, the creation of a table named `test_table`), and `down` to rollback that change (if we ever need to revert the change).
+
+The migration can be applied with:
+
+```
+npm run db:migrate
+```
+
+`node-pg-migrate` automatically looks for a `.env` file to find the database connection string, and applies the change. If we connect to our database, we can see that _two_ tables have been created:
+
+```
+❯ psql jrobs-term-project
+psql (15.2)
+Type "help" for help.
+
+jrobs-term-project=# \dt
+           List of relations
+ Schema |     Name     | Type  | Owner
+--------+--------------+-------+-------
+ public | pgmigrations | table | jrob
+ public | test_table   | table | jrob
+(2 rows)
+```
+
+The `pgmigrations` table helps `node-pg-migrate` keep track of which migrations have run:
+
+```
+❯ psql jrobs-term-project
+psql (15.2)
+Type "help" for help.
+
+jrobs-term-project=# \dt
+           List of relations
+ Schema |     Name     | Type  | Owner
+--------+--------------+-------+-------
+ public | pgmigrations | table | jrob
+ public | test_table   | table | jrob
+(2 rows)
+```
+
+The `test_table` is the table we defined in our migration:
+
+```
+jrobs-term-project=# select * from test_table;
+ id | created_at | test_string
+----+------------+-------------
+(0 rows)
+```
+
 ### Preparing to connect to the database
 
 Ensure that you have the [`postgres`](https://www.postgresql.org/) database server installed locally! This should install some command line tools, like `createdb`, that will allow you to interact with a development copy of your application's database locally.

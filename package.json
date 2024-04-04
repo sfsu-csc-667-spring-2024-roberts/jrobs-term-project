@@ -10,6 +10,9 @@
     "start:dev": "concurrently --names \"scripts,server\" -c \"blue,green\" \"npm:dev:build\" \"npm:dev:serve\"",
     "dev:serve": "NODE_ENV=development nodemon backend/server.js",
     "dev:build": "NODE_ENV=development node esbuild.js -- --watch",
+    "db:create": "node-pg-migrate create -- ",
+    "db:migrate": "node-pg-migrate up",
+    "db:rollback": "node-pg-migrate down",
     "prepare": "husky install"
   },
   "keywords": [],
@@ -22,7 +25,9 @@
     "ejs": "^3.1.9",
     "express": "^4.19.2",
     "http-errors": "^2.0.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "node-pg-migrate": "^6.2.2",
+    "pg": "^8.11.5"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
