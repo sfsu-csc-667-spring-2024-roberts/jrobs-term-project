@@ -9,7 +9,8 @@
     "build": "node esbuild.js",
     "start:dev": "concurrently --names \"scripts,server\" -c \"blue,green\" \"npm:dev:build\" \"npm:dev:serve\"",
     "dev:serve": "NODE_ENV=development nodemon backend/server.js",
-    "dev:build": "NODE_ENV=development node esbuild.js -- --watch"
+    "dev:build": "NODE_ENV=development node esbuild.js -- --watch",
+    "prepare": "husky install"
   },
   "keywords": [],
   "author": "",
@@ -26,8 +27,14 @@
     "concurrently": "^8.2.2",
     "connect-livereload": "^0.6.1",
     "esbuild": "^0.20.2",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
     "livereload": "^0.9.3",
     "nodemon": "^3.1.0",
+    "prettier": "^3.2.5",
     "typescript": "^5.4.3"
+  },
+  "lint-staged": {
+    "*.{js,css,md}": "prettier --write"
   }
 }

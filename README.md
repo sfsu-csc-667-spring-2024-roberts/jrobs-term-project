@@ -1,3 +1,24 @@
+### Quality of life updates
+
+In order to keep code consistently formatted as multiple developers work on the same project, installed some development dependencies to automatically reformat ("prettify") code as it gets committed into the repository. This diff is going to be large because all of the code written to this point will be run through `prettier`.
+
+```
+npm install --save-dev husky lint-staged prettier
+```
+
+To set up the pre-commit hook to automate code reformatting:
+
+```
+npx mrm@2 lint-staged
+```
+
+To prettify existing code:
+
+```
+npx prettier --write ./frontend
+npx prettier --write ./backend
+```
+
 ### Additional server configuration
 
 Adding the `morgan` package for additional server logging, and the `cookie-parser` package to be able to use cookies (this will be needed for authentication and maintaining user state between requests). Updated [`backend/server.js`](/backend/server.js) to use both of the new packages, as well as to allow json encoded bodies.
