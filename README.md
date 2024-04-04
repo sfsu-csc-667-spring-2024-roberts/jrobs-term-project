@@ -1,3 +1,21 @@
+### Creating the application skeleton
+
+In class or in a milestone, we created wireframes for each of the pages in the game application. In this step, I am creating views for each of those pages _without any dynamic functionality_, so that as I develop the application, the pages are already there. This requires the additiona of some new routes and their correponding views. I suggest splitting the pages between members of your team to distribute the work!
+
+I have chosen to use [tailwindcss](https://tailwindcss.com/) to help with styling; since we are not graphic designers, you are permitted to use front end **CSS** frameworks (but I do strongly encourage you to _understand_ the CSS you are using) like [tailwindcss](https://tailwindcss.com/) or [https://getbootstrap.com/](https://getbootstrap.com/).
+
+For the tailwind setup, I followed the instructions on their [installation page](https://tailwindcss.com/docs/installation).
+
+A few interesting things to highlight in this skeleton:
+
+1. I added middleware that we will eventually use for authentication in [`backend/middleware/is-authenticated.js`](/backend/middleware/is-authenticated.js). If you do the same, you will need to add the querystring `?showauth` to your URL to see pages that require authentication (like [this](http://localhost:3000/games/42?showauth=true)). Those pages are defined in [`backend/server.js`](/backend/server.js) by adding the `is-authenticated` middleware to any routes that we want to protect, like this (more on this when we implement auth):
+   ```js
+   app.use("/", routesHome);
+   app.use("/lobby", middlewareIsAuthenticated, routesLobby);
+   ```
+2. I reconfigured my view setup so that my views live next to the routes that use them.
+3. I added middleware that defines the set of menu items that will be displayed in my navigation. These _could_ be hardcoded in view templates, but I like being able to dynamically decide which menu items to show based on whether or not a user is logged in. I used two middlewares - one that initially defines the menu items to be for unauthenticated users, and one that may eventually define the menu items for authenticated users. In [`backend/server.js](/backend/server.js), the order that middleware is included is important, as it will be evaluated in the order it is found in the file!!
+
 ### Write migrations for initial DB setup
 
 In class or in a milestone, we discussed the creation of a database schema for your individual games. Translate your database schema into migrations. (See examples for my game in the `migrations/` folder)

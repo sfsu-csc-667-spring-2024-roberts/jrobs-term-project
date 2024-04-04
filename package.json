@@ -7,9 +7,10 @@
   "scripts": {
     "start": "node backend/server.js",
     "build": "node esbuild.js",
-    "start:dev": "concurrently --names \"scripts,server\" -c \"blue,green\" \"npm:dev:build\" \"npm:dev:serve\"",
+    "start:dev": "concurrently --names \"scripts,server\" -c \"blue,purple,green\" \"npm:dev:build\" \"npm:dev:build-css\" \"npm:dev:serve\"",
     "dev:serve": "NODE_ENV=development nodemon backend/server.js",
     "dev:build": "NODE_ENV=development node esbuild.js -- --watch",
+    "dev:build-css": "NODE_ENV=development tailwindcss -i ./frontend/css/main.css -o ./backend/static/css/main.css --watch",
     "db:create": "node-pg-migrate create -j=js -- ",
     "db:migrate": "node-pg-migrate up",
     "db:rollback": "node-pg-migrate down",
@@ -39,6 +40,7 @@
     "livereload": "^0.9.3",
     "nodemon": "^3.1.0",
     "prettier": "^3.2.5",
+    "tailwindcss": "^3.4.3",
     "typescript": "^5.4.3"
   },
   "lint-staged": {

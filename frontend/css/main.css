@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-gray-100;
+  }
+
+  html,
+  body {
+    @apply h-full;
+  }
+
+  .menu-item {
+    @apply text-gray-300;
+    @apply hover:bg-gray-700;
+    @apply hover:text-white;
+    @apply rounded-md;
+    @apply px-3;
+    @apply py-2;
+    @apply text-sm;
+    @apply font-medium;
+  }
+
+  .menu-item-selected {
+    @apply bg-gray-900;
+    @apply text-white;
+  }
+}

@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import express from "express";
-import db from "../db/connection.js";
+import db from "../../db/connection.js";
 const router = express.Router();
 
 router.get("/", async (_request, response) => {
