@@ -6,7 +6,8 @@ import createError from "http-errors";
 import livereload from "livereload";
 import morgan from "morgan";
 import * as path from "path";
-import rootRoutes from "./routes/root.js";
+import routesRoot from "./routes/root.js";
+import routesTest from "./routes/test.js";
 
 const PORT = process.env.PORT || 3000;
 // Note that this path omits "backend" - server is running in the backend directory
@@ -37,7 +38,8 @@ app.set("views", VIEW_PATH);
 app.set("view engine", "ejs");
 app.use(express.static(STATIC_PATH));
 
-app.use("/", rootRoutes);
+app.use("/", routesRoot);
+app.use("/test", routesTest);
 
 app.listen(PORT, () => {
   console.log(

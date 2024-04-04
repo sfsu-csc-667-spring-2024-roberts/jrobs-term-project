@@ -1,3 +1,32 @@
+### Interacting with the database from our code
+
+We will use the `pg-promise` package to communicate with our database. No, you may not use models or any ORM (Object Relational Mapping) package - we are not doing anything complex enough to really warrant that, and the requirement to write SQL directly forces students to learn a minimal amount of SQL (and always ask if you can't figure out how to do something in SQL).
+
+```
+npm install pg-promise
+```
+
+To organize our database related logic, create a `backend/db` directory, and add the file [`backend/db/connection.js`](/backend/db/connection.js) to hold the logic for connecting to the database. Add the code in my copy to your copy of `connection.js` - since we leverage `.env` to set up the environment variable `DATABASE_URL`, this logic is generic.
+
+Finally, to test the database connection, create a new route. Take a look at [`backend/server.js`](/backend/server.js) and [`backend/routes/test.js`](/backend/routes/test.js) for the requisite code, and ask questions in discord if there is any part you do not understand. Do note that `pg-promise` returns _promises_ - code that is being run asynchronously, and will _eventually_ resolve to a result. Because of this, it is critical that we use `await` to wait for the asynchronous response from the database; otherwise surprising, not good things will happen.
+
+Once the necessary code is added, visit [http://localhost:3000/test](http://localhost:3000/test) to see the results, and verify that the database connection was correctly established. You should see something like this:
+
+```json
+[
+  {
+    "id": 1,
+    "created_at": "2024-04-04T20:55:01.339Z",
+    "test_string": "Hello on Apr 4, 2024 @ 13:55:01"
+  },
+  {
+    "id": 2,
+    "created_at": "2024-04-04T20:55:04.416Z",
+    "test_string": "Hello on Apr 4, 2024 @ 13:55:04"
+  }
+]
+```
+
 ### Setting up migrations
 
 Let's say John and Sally are working on a project in their _separate and distinct_ development environments. John is tasked with setting the users database interactions, and Sally is tasked with setting up the game database interactions. John will create a `users` table in their local database, and Sally will create a `games` table in their local database.
@@ -13,7 +42,7 @@ npm install node-pg-migrate pg
 So that we don't need to remember the commands for migration, add these scripts to [`package.json`](./package.json):
 
 ```json
-"db:create": "node-pg-migrate create -- ",
+"db:create": "node-pg-migrate create -j=js -- ",
 "db:migrate": "node-pg-migrate up",
 "db:rollback": "node-pg-migrate down"
 ```
