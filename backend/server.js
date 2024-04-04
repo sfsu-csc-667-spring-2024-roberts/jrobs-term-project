@@ -3,14 +3,17 @@ import createError from "http-errors";
 import * as path from "path";
 import rootRoutes from "./routes/root.js";
 
-const __dirname = import.meta.dirname;
+const PORT = process.env.PORT || 3000;
 // Note that this path omits "backend" - server is running in the backend directory
-// so __dirname is PROJECT_ROOT/backend
-const STATIC_PATH = path.join(__dirname, "static");
+// so BACKEND_PATH is PROJECT_ROOT/backend
+const BACKEND_PATH = import.meta.dirname;
+const STATIC_PATH = path.join(BACKEND_PATH, "static");
+const VIEW_PATH = path.join(BACKEND_PATH, "views");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
+app.set("views", VIEW_PATH);
+app.set("view engine", "ejs");
 app.use(express.static(STATIC_PATH));
 
 app.use("/", rootRoutes);
