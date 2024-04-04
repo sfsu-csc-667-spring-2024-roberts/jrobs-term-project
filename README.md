@@ -1,3 +1,11 @@
+### Scripts in package.json
+
+Added the `start` script to enable running the server with the command:
+
+```
+npm run start
+```
+
 ### Adding some organization for routes
 
 Created the `backend/routes` directory and moved the route logic from [`backend/server.js`](/backend/server.js) to [`backend/routes/root.js`](/backend/routes/root.js). Set up the root routes in [`backend/server.js`](/backend/server.js) to serve all routes defined in [`backend/routes/root.js`](/backend/routes/root.js) from the root of the site (`/`).
