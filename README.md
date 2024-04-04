@@ -1,3 +1,11 @@
+### Automatically reload server process
+
+Added the `nodemon` dependency and a `start:dev` script to [`package.json`](./package.json) to reload the server process whenever a change is made to [`backend/server.js`](/backend/server.js), and any dependency of [`backend/server.js`](/backend/server.js).
+
+```
+npm install --save-dev nodemon
+```
+
 ### Scripts in package.json
 
 Added the `start` script to enable running the server with the command:
