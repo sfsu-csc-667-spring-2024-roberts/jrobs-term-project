@@ -6,17 +6,24 @@
   "main": "index.js",
   "scripts": {
     "start": "node backend/server.js",
-    "start:dev": "nodemon backend/server.js"
+    "build": "node esbuild.js",
+    "start:dev": "concurrently --names \"scripts,server\" -c \"blue,green\" \"npm:dev:build\" \"npm:dev:serve\"",
+    "dev:serve": "NODE_ENV=development nodemon backend/server.js",
+    "dev:build": "NODE_ENV=development node esbuild.js -- --watch"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dayjs": "^1.11.10",
     "ejs": "^3.1.9",
     "express": "^4.19.2",
     "http-errors": "^2.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "concurrently": "^8.2.2",
+    "esbuild": "^0.20.2",
+    "nodemon": "^3.1.0",
+    "typescript": "^5.4.3"
   }
 }
