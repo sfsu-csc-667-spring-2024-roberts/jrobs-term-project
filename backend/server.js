@@ -1,5 +1,6 @@
 import connectLiveReload from "connect-livereload";
 import cookieParser from "cookie-parser";
+import "dotenv/config.js";
 import express from "express";
 import createError from "http-errors";
 import livereload from "livereload";
@@ -39,7 +40,9 @@ app.use(express.static(STATIC_PATH));
 app.use("/", rootRoutes);
 
 app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
+  console.log(
+    `Server started on port ${PORT}, in the ${process.env.NODE_ENV ?? "production"} environment`,
+  );
 });
 
 app.use((_request, _response, next) => {

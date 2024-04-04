@@ -1,3 +1,33 @@
+### Preparing to connect to the database
+
+Ensure that you have the [`postgres`](https://www.postgresql.org/) database server installed locally! This should install some command line tools, like `createdb`, that will allow you to interact with a development copy of your application's database locally.
+
+First, create the database (I usually name it after my app):
+
+```
+createdb DATABASE_NAME
+```
+
+Create a `.env` file that will be used to store "secrets" - like database passwords - locally. Since each developer on the team will be interacting with their own version of a development database, and since all of these will be distinct from the production database, we need a way to store and use things like database connection strings (which will be different for each developer and the production environment). The `.env` file will hold these values, and we will use the `dotenv` package to load the values stored in the `.env` file into our environment when we start up our development server, and if (when) our project is deployed, we can simply create the same environment variables with their production values on the production server. Note that the `.env` file MUST NOT BE COMMITTED TO GITHUB. It will hold sensitive information (like passwords, authentication info for external services, etc.) so should not be made public. Ensure that `.gitignore` has a line that reads `.env` to prevent this file from getting committed!
+
+In a \*nix shell, you can add your database connection string to your `.env` file like this (this assumes no password, and that the current user is the database user as well):
+
+```
+echo DATABASE_URL=postgres://`whoami`@localhost:5432/DATABASE_NAME >> .env
+```
+
+Install the `dotenv` package:
+
+```
+npm install dotenv
+```
+
+Update [`backend/server.js`](/backend/server.js) to load environment variables automatically (I also updated my startup message to tell me which environment I'm running in):
+
+```js
+import "dotenv/config";
+```
+
 ### Quality of life updates
 
 In order to keep code consistently formatted as multiple developers work on the same project, installed some development dependencies to automatically reformat ("prettify") code as it gets committed into the repository. This diff is going to be large because all of the code written to this point will be run through `prettier`.

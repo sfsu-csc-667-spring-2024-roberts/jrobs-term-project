@@ -18,6 +18,7 @@
   "dependencies": {
     "cookie-parser": "^1.4.6",
     "dayjs": "^1.11.10",
+    "dotenv": "^16.4.5",
     "ejs": "^3.1.9",
     "express": "^4.19.2",
     "http-errors": "^2.0.0",
