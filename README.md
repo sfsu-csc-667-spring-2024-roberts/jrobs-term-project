@@ -1,3 +1,7 @@
+### Write migrations for initial DB setup
+
+In class or in a milestone, we discussed the creation of a database schema for your individual games. Translate your database schema into migrations. (See examples for my game in the `migrations/` folder)
+
 ### Interacting with the database from our code
 
 We will use the `pg-promise` package to communicate with our database. No, you may not use models or any ORM (Object Relational Mapping) package - we are not doing anything complex enough to really warrant that, and the requirement to write SQL directly forces students to learn a minimal amount of SQL (and always ask if you can't figure out how to do something in SQL).
