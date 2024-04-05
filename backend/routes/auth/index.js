@@ -30,8 +30,20 @@ router.post("/login", (request, response) => {
   response.redirect("/lobby");
 });
 
-router.get("/logout", (request, response) => {
-  response.redirect("/");
+router.get("/logout", (request, response, next) => {
+  request.session.user = null;
+  request.session.save((error) => {
+    if (error) {
+      next(error);
+    }
+
+    request.session.regenerate((error) => {
+      if (error) {
+        next(error);
+      }
+      response.redirect("/");
+    });
+  });
 });
 
 export default router;

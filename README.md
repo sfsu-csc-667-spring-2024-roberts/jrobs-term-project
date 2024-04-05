@@ -3,9 +3,40 @@
 ## User authentication and sessions
 
 <details>
+  <summary>Logging a user out</summary>
+
+If you stop your server and restart it, and browse to the `/lobby` page, you should still be logged in. The browser is sending the cookie that `express-session` created back to the server when it makes a request, and the session information that is stored in the database is getting populated into the `request.session` object. This is convenient, but will prevent use from testing or sign in logic, so we will now implement the logic for signing out. This is fairly straightforward - we simply need to tell `express-session` to remove the session information from the database when the `/auth/logout` route is called in [`backend/routes/auth/index.js`](/backend/routes/auth/index.js) (see the `express-session` docs if you're curious about why some of this code was written):
+
+```js
+router.get("/logout", (request, response, next) => {
+  request.session.user = null;
+  request.session.save((error) => {
+    if (error) {
+      next(error);
+    }
+
+    request.session.regenerate((error) => {
+      if (error) {
+        next(error);
+        response.redirect("/");
+      }
+    });
+  });
+});
+```
+
+We also need to provide a logout link (I have done so in my html skeleton already in [`backend/routes/layout/navigation.ejs`](/backend/routes/layout/navigation.ejs)):
+
+```html
+<a href="/auth/logout">Sign out</a>
+```
+
+</details>
+
+<details>
   <summary>Creating a user</summary>
 
-### Creating a user
+### [Creating a user](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/b25e21f003530d80cd626824e1f579540e63a6f9)
 
 We need one more dependency for user creation - a package that will securely encrypt user passwords:
 
@@ -100,6 +131,21 @@ Finally, we can tell the [authentication form](/backend/routes/auth/form.ejs) th
 <form class="space-y-6" action="/auth/<%= format %>" method="POST">
   <!-- form content -->
 </form>
+```
+
+With all of this logic in place, the [`backend/middleware/is-authenticated.js`](/backend/middleware/is-authenticated.js) middleware can be updated to make use of the `request.session` object:
+
+```js
+export default function (request, response, next) {
+  if (
+    request.session.user !== undefined &&
+    request.session.user.id !== undefined
+  ) {
+    next();
+  } else {
+    response.redirect("/");
+  }
+}
 ```
 
 You should now be able to browse to the registration form, enter your information, and submit it. This will add a user to the database, and redirect the user to the lobby page. Checking the database, we see a new record is created in the users table, along with a new entry in the sessions table:
