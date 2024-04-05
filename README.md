@@ -1,12 +1,33 @@
-### Lobby page
+# Term Project Example
+
+## User interface skeleton
+
+### Game page
+
+Html and css for the game page in [`backend/routes/games/games.ejs`](/backend/routes/games/games.ejs). Yet again, no functionality yet!
+
+<details>
+  <summary>Lobby page</summary>
+
+### [Lobby page](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/c41b67a371f715cdfc19e58c08a0a0ab22591230)
 
 Html and css for the lobby page in [`backend/routes/lobby/lobby.ejs`](/backend/routes/lobby/lobby.ejs). Again, no functionality yet!
 
-### Login and register forms
+</details>
+
+<details>
+  <summary>Login and register forms</summary>
+
+### [Login and register forms](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/1619d0dede42415c00ba9340cbf6cce9d5ef8ec2)
 
 Nothing much here; a little re-organization and a lot of html and css to create the [`backend/routes/auth/login.ejs`](/backend/routes/auth/login.ejs) and the [`backend/routes/auth/register.ejs`](/backend/routes/auth/register.ejs) forms (which both include the same form from [`backend/routes/auth/form.ejs`](/backend/routes/auth/form.ejs)). No functionality included yet!
 
-### Creating the application skeleton
+</details>
+
+<details>
+  <summary>Creating the application skeleton</summary>
+
+### [Creating the application skeleton](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/ee79da1ed2619d4edce5d8bba44a3eac254c9652)
 
 In class or in a milestone, we created wireframes for each of the pages in the game application. In this step, I am creating views for each of those pages _without any dynamic functionality_, so that as I develop the application, the pages are already there. This requires the additiona of some new routes and their correponding views. I suggest splitting the pages between members of your team to distribute the work!
 
@@ -24,11 +45,23 @@ A few interesting things to highlight in this skeleton:
 2. I reconfigured my view setup so that my views live next to the routes that use them.
 3. I added middleware that defines the set of menu items that will be displayed in my navigation. These _could_ be hardcoded in view templates, but I like being able to dynamically decide which menu items to show based on whether or not a user is logged in. I used two middlewares - one that initially defines the menu items to be for unauthenticated users, and one that may eventually define the menu items for authenticated users. In [`backend/server.js](/backend/server.js), the order that middleware is included is important, as it will be evaluated in the order it is found in the file!!
 
-### Write migrations for initial DB setup
+</details>
+
+## Database and migrations setup
+
+<details>
+  <summary>Write migrations for initial DB setup</summary>
+
+### [Write migrations for initial DB setup](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/433da6df599d8ec79f62174f92b470d1a8918a7c)
 
 In class or in a milestone, we discussed the creation of a database schema for your individual games. Translate your database schema into migrations. (See examples for my game in the `migrations/` folder)
 
-### Interacting with the database from our code
+</details>
+
+<details>
+  <summary>Interacting with the database from our code</summary>
+
+### [Interacting with the database from our code](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/4af5231435ecae9e6404690f54df8447345aa5be)
 
 We will use the `pg-promise` package to communicate with our database. No, you may not use models or any ORM (Object Relational Mapping) package - we are not doing anything complex enough to really warrant that, and the requirement to write SQL directly forces students to learn a minimal amount of SQL (and always ask if you can't figure out how to do something in SQL).
 
@@ -57,7 +90,12 @@ Once the necessary code is added, visit [http://localhost:3000/test](http://loca
 ]
 ```
 
-### Setting up migrations
+</details>
+
+<details>
+  <summary>Setting up migrations</summary>
+
+### [Setting up migrations](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/3a3025358595ecc62fd174c9fb47d7d61c8efedc)
 
 Let's say John and Sally are working on a project in their _separate and distinct_ development environments. John is tasked with setting the users database interactions, and Sally is tasked with setting up the game database interactions. John will create a `users` table in their local database, and Sally will create a `games` table in their local database.
 
@@ -132,7 +170,12 @@ jrobs-term-project=# select * from test_table;
 (0 rows)
 ```
 
-### Preparing to connect to the database
+</details>
+
+<details>
+  <summary>Preparing to connect to the database</summary>
+
+### [Preparing to connect to the database](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/267f62538ccb3b15fe6b2bf880bffc6affe6c9a2)
 
 Ensure that you have the [`postgres`](https://www.postgresql.org/) database server installed locally! This should install some command line tools, like `createdb`, that will allow you to interact with a development copy of your application's database locally.
 
@@ -162,7 +205,14 @@ Update [`backend/server.js`](/backend/server.js) to load environment variables a
 import "dotenv/config";
 ```
 
-### Quality of life updates
+</details>
+
+## Project setup and configuration
+
+<details>
+  <summary>Quality of life updates</summary>
+
+### [Quality of life updates](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/53596743a2cc96240ed7572e3cb63b1ccdf176c5)
 
 In order to keep code consistently formatted as multiple developers work on the same project, installed some development dependencies to automatically reformat ("prettify") code as it gets committed into the repository. This diff is going to be large because all of the code written to this point will be run through `prettier`.
 
@@ -183,7 +233,12 @@ npx prettier --write ./frontend
 npx prettier --write ./backend
 ```
 
-### Additional server configuration
+</details>
+
+<details>
+  <summary>Additional server configuration</summary>
+
+### [Additional server configuration](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/8ca78d11aff01735aef734b275b914027bd4686d)
 
 Adding the `morgan` package for additional server logging, and the `cookie-parser` package to be able to use cookies (this will be needed for authentication and maintaining user state between requests). Updated [`backend/server.js`](/backend/server.js) to use both of the new packages, as well as to allow json encoded bodies.
 
@@ -191,7 +246,12 @@ Adding the `morgan` package for additional server logging, and the `cookie-parse
 npm install morgan cookie-parser
 ```
 
-### Automatically reload site in development
+</details>
+
+<details>
+  <summary>Automatically reload site in development</summary>
+
+### [Automatically reload site in development](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/f836d9c378c0ba3d6cff5170cd85cca7568a6299)
 
 Added two dependencies - `livereload` and `connect-livereload` - and updated [`backend/server.js](/backend/server.js) to use these dependencies in the development environment to automatically reload the website when changes are made to the code. Added [`nodemon.json`](./nodemon.json) to provide a configuration for `nodemon` that would also watch the `.ejs` files in `backend/views`, and to _ignore_ the `backend/static/dist` folder (`livereload` will automatically refresh the page, which will fetch the newly created bundle).
 
@@ -199,7 +259,12 @@ Added two dependencies - `livereload` and `connect-livereload` - and updated [`b
 npm install --save-dev livereload connect-livereload
 ```
 
-### Building frontend code
+</details>
+
+<details>
+  <summary>Building frontend code</summary>
+
+### [Building frontend code](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/67e711c6b870db9c30602e6e38e58e69cf1ec0db)
 
 Added the `/frontend` directory, which will store the code that will run in the client. This code will be served as a static file by the server from the `/backend/static/dist` directory. Installed `esbuild` to be able to "bundle" our front-end code into a single file to be served by the server. For funsies, using [typescript](https://www.typescriptlang.org/) in frontend code.
 
@@ -217,7 +282,12 @@ npm install --save-dev concurrently typescript
 npm install dayjs
 ```
 
-### Template engine
+</details>
+
+<details>
+  <summary>Template engine</summary>
+
+### [Template engine](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/671b31c53b51b52534e3da51e1b24f94316a4a5d)
 
 Installed the `ejs` template engine, and updated [`backend/server.js`](/backend/server.js) to be able to "render" templates from the `/backend/views` directory. Added [`backend/views/root.ejs`](/backend/views/root.ejs) as the first view, and updated the root route ([`/backend/routes/root.js`](/backend/routes/root.js)) to use this template.
 
@@ -225,15 +295,30 @@ Installed the `ejs` template engine, and updated [`backend/server.js`](/backend/
 npm install ejs
 ```
 
-### Serving static assets
+</details>
+
+<details>
+  <summary>Serving static assets</summary>
+
+### [Serving static assets](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/29e5739d35dd757723214be9144941d0b041b1ec)
 
 Sometimes, we do not need to dynamically generate a response to a client - we just want to send a "static" file. Created `backend/static` directory (and added some favicons to it for testing), and configured the server to serve static files from this directory.
 
-### Introduction to middleware
+</details>
+
+<details>
+  <summary>Introduction to middleware</summary>
+
+### [Introduction to middleware](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/c2081d692c65b81015492345620ae0d068d207ad)
 
 Create a middleware example in [`backend/middleware/request-time.js`](/backend/middleware/request-time.js), and updated the server to `use` the middleware. This middleware simply prints out the request type and timestamp whenever a request is made to the server (and will be removed in a future commit since it is intended as an example only).
 
-### http-errors
+</details>
+
+<details>
+  <summary>http-errors</summary>
+
+### [http-errors](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/0ec54c5eceb5a019869b85e1ffd5d868fd118e03)
 
 Added the `http-errors` dependency, and configured the server to provide a more meaningful error message if a route is not found. Note that in a production environment, we would want to set the `NODE_ENV` to "production" to prevent the stack trace from being shown to the user (this could create a security risk by unintentionally revealing details of the failing request).
 
@@ -241,7 +326,12 @@ Added the `http-errors` dependency, and configured the server to provide a more 
 npm install http-errors
 ```
 
-### Automatically reload server process
+</details>
+
+<details>
+  <summary>Automatically reload server process</summary>
+
+### [Automatically reload server process](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/5d6221277ec4d5192ac744daa00fde63cdacc3d2)
 
 Added the `nodemon` dependency and a `start:dev` script to [`package.json`](./package.json) to reload the server process whenever a change is made to [`backend/server.js`](/backend/server.js), and any dependency of [`backend/server.js`](/backend/server.js).
 
@@ -249,7 +339,12 @@ Added the `nodemon` dependency and a `start:dev` script to [`package.json`](./pa
 npm install --save-dev nodemon
 ```
 
-### Scripts in package.json
+</details>
+
+<details>
+  <summary>Scripts in package.json</summary>
+
+### [Scripts in package.json](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/c7b44c85f3515b4f666e9e26ca197c82bbf3eba2)
 
 Added the `start` script to enable running the server with the command:
 
@@ -257,15 +352,30 @@ Added the `start` script to enable running the server with the command:
 npm run start
 ```
 
-### Adding some organization for routes
+</details>
+
+<details>
+  <summary>Adding some organization for routes</summary>
+
+### [Adding some organization for routes](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/375595d17c9440d6b01c1af03969012f53692335)
 
 Created the `backend/routes` directory and moved the route logic from [`backend/server.js`](/backend/server.js) to [`backend/routes/root.js`](/backend/routes/root.js). Set up the root routes in [`backend/server.js`](/backend/server.js) to serve all routes defined in [`backend/routes/root.js`](/backend/routes/root.js) from the root of the site (`/`).
 
-### Adding our first route
+</details>
+
+<details>
+  <summary>Adding our first route</summary>
+
+### [Adding our first route](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/375595d17c9440d6b01c1af03969012f53692335)
 
 Write the basic server setup code in [`backend/server.js`](/backend/server.js) to get a simple route set up. Updated [`package.json`](./package.json) to be able to use ES6.
 
-### Initial project setup
+</details>
+
+<details>
+  <summary>Initial project setup</summary>
+
+### [Initial project setup](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/cb389932c21e7c5fdad2dd0000c49c2272994d25)
 
 Created a `backend` directory where all of our server side source code will go, and the [`server.js`](/backend/server.js) file where we will write our server configuration code.
 
@@ -274,3 +384,5 @@ Install the express dependency with:
 ```
 npm install express
 ```
+
+</details>

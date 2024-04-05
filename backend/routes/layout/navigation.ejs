@@ -15,6 +15,7 @@
         <div class="hidden md:block">
           <div class="ml-10 flex items-baseline space-x-4">
             <% menuItems.forEach(({ url, name, current }) => { %>
+              <!-- prettier-ignore -->
               <a href="<%= url %>" class="menu-item<%= current ? " menu-item-selected" : "" %>"><%= name %></a>
             <% }); %>
           </div>
