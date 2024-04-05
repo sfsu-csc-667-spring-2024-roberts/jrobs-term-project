@@ -11,7 +11,7 @@
     "dev:serve": "NODE_ENV=development nodemon backend/server.js",
     "dev:build": "NODE_ENV=development node esbuild.js -- --watch",
     "dev:build-css": "NODE_ENV=development tailwindcss -i ./frontend/css/main.css -o ./backend/static/css/main.css --watch",
-    "db:create": "node-pg-migrate create -j=js -- ",
+    "db:create": "node-pg-migrate create -j=cjs -- ",
     "db:migrate": "node-pg-migrate up",
     "db:rollback": "node-pg-migrate down",
     "prepare": "husky install"

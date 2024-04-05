@@ -1,15 +1,18 @@
 <%- include('../layout/header', { suppressHeader: true }) %>
-
+<h2 class="text-2xl font-bold"><%= description %></h2>
 <div class="flex flex-row">
   <div class="basis-2/3 pr-10 flex flex-row pt-20">
     <div class="basis-1/6">
       <div class="flex flex-col items-center h-full">
         <img
-          src="/images/favicons/android-chrome-192x192.png"
-          class="h-10 w-10"
+          src="https://gravatar.com/avatar/<%= users[0].gravatar %>"
+          class="h-10 w-10 rounded-full"
         />
-        <p class="font-bold text-gray-800">jrob</p>
-        <div class="justify-self-end text-gray-600 text-xs">X cards left</div>
+        <p class="font-bold text-gray-800"><%= users[0].email %></p>
+        <div class="justify-self-end text-gray-600 text-xs">
+          <% if (users.length === 2) { %> X cards left <% } else { %> Waiting...
+          <% } %>
+        </div>
       </div>
     </div>
     <div class="basis-1/6 flex">
@@ -26,12 +29,16 @@
     </div>
     <div class="basis-1/6">
       <div class="flex flex-col items-center h-full">
+        <% if (users.length === 2) { %>
         <img
           src="/images/favicons/android-chrome-192x192.png"
           class="h-10 w-10"
         />
         <p class="font-bold text-gray-800">jrob</p>
         <div class="justify-self-end text-gray-600 text-xs">X cards left</div>
+        <% } else { %>
+        <div class="justify-self-end text-gray-600 text-xs">Waiting...</div>
+        <% } %>
       </div>
     </div>
   </div>

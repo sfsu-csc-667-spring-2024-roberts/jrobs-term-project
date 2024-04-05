@@ -1,5 +1,141 @@
 # Term Project Example
 
+## Lobby logic
+
+<details>
+  <summary>Creating games</summary>
+
+### Creating games
+
+My html skeleton already included a button for creating games; I have updated it to include an input, and to wrap both the input and the button in a form element. You may require more advanced logic (for example, a dialog) to allow users to create a game. The form will post to a new route, `create`, in the [`backend/routes/games/index.js`](/backend/routes/games/index.js) route. On successful completion of a game, the user will be redirected the new game page. All of this requires some additional database logic ([`backend/db/games/index.js`](/backend/db/games/index.js)) for creating a game and adding the user that created the game to the `game_users` table.
+
+In [`backend/db/users/index.js`](/backend/db/users/index.js)
+
+```js
+import db from "../connection.js";
+
+const Sql = {
+  CREATE:
+    "INSERT INTO games (creator_id, description) VALUES ($1, $2) RETURNING id",
+  UPDATE_DESCRIPTION: "UPDATE games SET description=$1 WHERE id=$2",
+  ADD_PLAYER: "INSERT INTO game_users (game_id, user_id) VALUES ($1, $2)",
+};
+
+const create = async (creatorId, description) => {
+  try {
+    const { id } = await db.one(Sql.CREATE, [
+      creatorId,
+      description || "placeholder",
+    ]);
+
+    if (description === undefined) {
+      await db.none(Sql.UPDATE_DESCRIPTION, [`Game ${id}`, id]);
+    }
+
+    await db.none(Sql.ADD_PLAYER, [creatorId, id]);
+
+    return id;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+export default {
+  create,
+};
+```
+
+Don't forget to update your "manifest file" ([`backend/db/index.js`](/backend/db/index.js)):
+
+```js
+export { default as Games } from "./games/index.js";
+export { default as Users } from "./users/index.js";
+```
+
+The `games/create` route can be a post route in [`backend/routes/games/index.js`](/backend/routes/games/index.js):
+
+```js
+import { Games } from "../../db/index.js";
+
+/* Existing code */
+
+router.post("/create", async (request, response) => {
+  const { id: creatorId } = request.session.user;
+  const { description } = request.body;
+
+  try {
+    const id = await Games.create(creatorId, description);
+    response.redirect(`/games/${id}`);
+  } catch (error) {
+    // If we were nice we would provide the user with an error message
+    response.redirect("/lobby");
+  }
+});
+```
+
+Now that we have some game and game user information, we can create some additional database logic to retrieve that information for display in the [`backend/routes/games/games.ejs`](/backend/routes/games/games.ejs) template. In [`backend/db/games/index.js`](/backend/db/games/index.js), add:
+
+```js
+const Sql = {
+  /* Existing queries */
+  GET_GAME: "SELECT * FROM games WHERE id=$1",
+  GET_USERS:
+    "SELECT users.id, users.email, game_users.seat FROM users, game_users, games WHERE games.id=$1 AND game_users.game_id=games.id AND game_users.user_id=users.id ORDER BY game_users.seat",
+};
+
+/* Existing Code */
+const get = async (gameId) => {
+  // We could use a join, but it gets nasty quickly
+  const game = await db.one(Sql.GET_GAME, [gameId]);
+  const users = await db.any(Sql.GET_USERS, [gameId]);
+
+  return {
+    ...game,
+    users,
+  };
+};
+
+export default {
+  create,
+  get,
+};
+```
+
+Update the [route](/backend/routes/games/index.js):
+
+```js
+router.get("/:id", async (request, response) => {
+  const { id } = request.params;
+  const gameData = await Games.get(id);
+
+  response.render("games/games", gameData);
+});
+```
+
+Now, all of the game data that is returned can be used in the template. Check out the template code to see how I chose to use it; here's the result of a `Games.get` query:
+
+```json
+{
+  "id": 11,
+  "created_at": "2024-04-05T23:21:43.966Z",
+  "creator_id": 5,
+  "description": "My super fun game",
+  "users": [
+    {
+      "id": 5,
+      "email": "jrob@sfsu.edu",
+      "gravatar": "f03deabb0378ab2658e86c4c7fbfd369fd7993429790709c05738483d482ce4e",
+      "seat": 1
+    }
+  ]
+}
+```
+
+Note: I made some unrelated changes to some DB queries and templates because I got tired of calculating my gravatar hash every time I needed it. The changes calculate the gravatar hash when a user is created, and then returns that value along with the id and email for insertion into the session.
+
+</details>
+
 ## User authentication and sessions
 
 <details>
