@@ -1,10 +1,127 @@
 # Term Project Example
 
+## User authentication and sessions
+
+<details>
+  <summary>Cleaning up our code</summary>
+
+### Cleaning up our code
+
+Our [`backend/server.js`] file is becoming a little verbose, and now is a good time to refactor the code to make it more readable and organized. To do this, we will create a new directory named `config`, with individual files to handle setup of different concerns. Each of these files will `export` a function that takes the `express` `app` object as a parameter, along with any other information required from the server to handle configuration for a given concern. In addition to configuration, we can also make our route and middleware imports more concise, by adding a "manifest file" that re-exports individual functions from existing modules in their respective directories.
+
+#### Organizing server configuration
+
+Create the file [`backend/config/livereload.js](/backend/config/livereload.js) with this content:
+
+```js
+import connectLiveReload from "connect-livereload";
+import livereload from "livereload";
+import * as path from "path";
+
+export default function liveReload(app, staticFilesPath) {
+  if (process.env.NODE_ENV === "development") {
+    const liveReloadServer = livereload.createServer();
+    liveReloadServer.watch(path.join(staticFilesPath, "dist"));
+    liveReloadServer.server.once("connection", () => {
+      setTimeout(() => {
+        liveReloadServer.refresh("/");
+      }, 100);
+    });
+
+    app.use(connectLiveReload());
+  }
+}
+```
+
+Create the file [`backend/config/views.js`](/backend/config/views.js) with this content:
+
+```js
+import express from "express";
+
+export default function views(app, viewsPath, staticFilesPath) {
+  app.set("views", viewsPath);
+  app.set("view engine", "ejs");
+  app.use(express.static(staticFilesPath));
+}
+```
+
+In both cases, we have moved the logic from the [`backend/server.js`](/backend/server.js) file into functions, and updated the logic to use parameters passed in to those functions. The "manifest file" [`backend/config/index.js`](/backend/config/index.js) will simply re-export thee functions:
+
+```js
+export { default as liveReload } from "./livereload.js";
+export { default as views } from "./views.js";
+```
+
+Now, in [`backend/server.js`](/backend/server.js), the original logic can be replaced by calls to these functions, that are `import`ed with a concise `import` statement:
+
+```js
+import * as configure from "./config/index.js";
+
+/* Other server code - make sure to add these calls in the same place they were previously used in server.js */
+configure.liveReload(app, STATIC_PATH);
+configure.views(app, VIEW_PATH, STATIC_PATH);
+```
+
+#### Organizing middleware
+
+Create the "manifest file" [`index.js`](/backend/middleware/index.js) for the `backend/middleware` directory:
+
+```js
+export { default as isAuthenticated } from "./is-authenticated.js";
+export { default as menuItemsAuthenticated } from "./menu-items-authenticated.js";
+export { default as menuItemsDefault } from "./menu-items-default.js";
+```
+
+And update [`backend/server.js`](/backend/server.js):
+
+```js
+import * as middleware from "./middleware/index.js";
+
+/* Other server code - make sure to add these calls in the same place they were previously used in server.js */
+app.use(middleware.menuItemsDefault);
+
+/* more code */
+app.use(middleware.isAuthenticated);
+app.use(middleware.menuItemsAuthenticated);
+```
+
+#### Organizing routes
+
+Create the "manifest file" [`index.js`](/backend/routes/index.js) for the `backend/routes` directory:
+
+```js
+export { default as auth } from "./auth/index.js";
+export { default as games } from "./games/index.js";
+export { default as home } from "./home/index.js";
+export { default as lobby } from "./lobby/index.js";
+```
+
+And update [`backend/server.js`](/backend/server.js):
+
+```js
+import * as routes from "./routes/index.js";
+
+/* Other server code - make sure to add these calls in the same place they were previously used in server.js */
+app.use("/", routes.home);
+app.use("/auth", routes.auth);
+
+/* middleware code */
+app.use("/lobby", routes.lobby);
+app.use("/games", routes.games);
+```
+
+</details>
+
 ## User interface skeleton
 
-### Game page
+<details>
+  <summary>Game page</summary>
+
+### [Game page](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/f93261b808ae40cc19f348906132ed242e216b92)
 
 Html and css for the game page in [`backend/routes/games/games.ejs`](/backend/routes/games/games.ejs). Yet again, no functionality yet!
+
+</details>
 
 <details>
   <summary>Lobby page</summary>
