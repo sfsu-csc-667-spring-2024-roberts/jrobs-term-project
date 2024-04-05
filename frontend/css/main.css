@@ -7,6 +7,10 @@
     @apply bg-gray-100;
   }
 
+  html.no-nav {
+    @apply bg-gray-900;
+  }
+
   html,
   body {
     @apply h-full;

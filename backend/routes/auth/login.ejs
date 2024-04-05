@@ -1,3 +1,31 @@
-<%- include('../layout/header') %>
-<h1>Login</h1>
-<%- include('form') %> <%- include('../layout/footer') %>
+<%- include('../layout/header-no-nav') %>
+
+<div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+    <img
+      class="mx-auto h-10 w-auto"
+      src="/images/favicons/android-chrome-192x192.png"
+      alt="It's me!"
+    />
+    <h2
+      class="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-white"
+    >
+      Sign in to your account
+    </h2>
+  </div>
+
+  <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+    <%- include('form', { format: "login"}) %>
+
+    <p class="mt-10 text-center text-sm text-gray-400">
+      Don't have an account?
+      <a
+        href="/auth/register"
+        class="font-semibold leading-6 text-indigo-400 hover:text-indigo-300"
+        >Register here</a
+      >
+    </p>
+  </div>
+</div>
+
+<%- include('../layout/footer') %>

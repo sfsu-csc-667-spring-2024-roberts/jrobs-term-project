@@ -1,3 +1,7 @@
+### Login and register forms
+
+Nothing much here; a little re-organization and a lot of html and css to create the [`backend/routes/auth/login.ejs`](/backend/routes/auth/login.ejs) and the [`backend/routes/auth/register.ejs`](/backend/routes/auth/register.ejs) forms (which both include the same form from [`backend/routes/auth/form.ejs`](/backend/routes/auth/form.ejs)). No functionality included yet!
+
 ### Creating the application skeleton
 
 In class or in a milestone, we created wireframes for each of the pages in the game application. In this step, I am creating views for each of those pages _without any dynamic functionality_, so that as I develop the application, the pages are already there. This requires the additiona of some new routes and their correponding views. I suggest splitting the pages between members of your team to distribute the work!
