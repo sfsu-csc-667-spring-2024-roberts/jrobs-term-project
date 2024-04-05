@@ -3,9 +3,67 @@
 ## User authentication and sessions
 
 <details>
+  <summary>Session setup</summary>
+
+### Session setup
+
+We need to configure the `express-session` middleware, and tell our server about it. We can make use of our newly organized `server.js` file and `config` directory, and add a file for session setup [`backend/config/session.js](/backend/config/session.js) (don't forget to update the "manifest file"):
+
+```js
+import connectPgSimple from "connect-pg-simple";
+import session from "express-session";
+
+let sessionMiddleware = undefined;
+
+export default function getSession() {
+  if (sessionMiddleware === undefined) {
+    return session({
+      store: new (connectPgSimple(session))({ createTableIfMissing: true }),
+      secret: process.env.SESSION_SECRET,
+      resave: true,
+      saveUninitialized: true,
+      secure: process.env.NODE_ENV === "production",
+    });
+  }
+
+  return sessionMiddleware;
+}
+```
+
+In this code, the value of `sessionMiddleware` is being cached within the module so that repeated calls can be made to this function to get the _same_ session middleware. In addition - unlike our other config functions - we are returning the `session` object; we are going to need it later on! Also, a new environment variable named `SESSION_SECRET` is being used by `express-session` to sign the cookie; make sure to add this to your `.env` file!
+
+After making a request to the server, the session middleware initializes the table it will be using for session storage (that is what the `createTableIsMissing` configuration is for in the store setup).
+
+```
+jrobs-term-project=# \dt
+jrobs-term-project=# \dt
+              List of relations
+ Schema |        Name         | Type  | Owner
+--------+---------------------+-------+-------
+ public | game_cards          | table | jrob
+ public | game_users          | table | jrob
+ public | games               | table | jrob
+ public | pgmigrations        | table | jrob
+ public | session             | table | jrob
+ public | standard_deck_cards | table | jrob
+ public | test_table          | table | jrob
+ public | users               | table | jrob
+(8 rows)
+
+jrobs-term-project=# select * from session;
+               sid                |                                     sess                                     |       expire
+----------------------------------+------------------------------------------------------------------------------+---------------------
+ dUP56eT-FydoU0xAWALTACJ38s7_7Gtf | {"cookie":{"originalMaxAge":null,"expires":null,"httpOnly":true,"path":"/"}} | 2024-04-06 11:38:33
+ HpkqymFa7tgKLGaKTv94Vq58Cjyt_Rap | {"cookie":{"originalMaxAge":null,"expires":null,"httpOnly":true,"path":"/"}} | 2024-04-06 11:38:33
+(2 rows)
+```
+
+</details>
+
+<details>
   <summary>Installing dependencies</summary>
 
-### Installing dependencies
+### [Installing dependencies](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/153f5628d4e40b0fa0575b5fc0aff5d8ac89b367)
 
 Begin by install the required packages:
 
@@ -24,7 +82,7 @@ npm install express-session connect-pg-simple
 <details>
   <summary>Cleaning up our code</summary>
 
-### [Cleaning up our code](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/389f76f30e72ff7e31f57d14fa164dc8a031251c)
+### [Cleaning up our code](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/12b07b35febe784f2ea15285eb8ae2fc0b38baf3)
 
 Our [`backend/server.js`] file is becoming a little verbose, and now is a good time to refactor the code to make it more readable and organized. To do this, we will create a new directory named `config`, with individual files to handle setup of different concerns. Each of these files will `export` a function that takes the `express` `app` object as a parameter, along with any other information required from the server to handle configuration for a given concern. In addition to configuration, we can also make our route and middleware imports more concise, by adding a "manifest file" that re-exports individual functions from existing modules in their respective directories.
 

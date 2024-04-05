@@ -21,6 +21,7 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(configure.session());
 
 configure.liveReload(app, STATIC_PATH);
 configure.views(app, VIEW_PATH, STATIC_PATH);
