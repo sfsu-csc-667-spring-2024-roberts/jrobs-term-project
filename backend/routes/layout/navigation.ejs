@@ -7,7 +7,7 @@
           <img
             class="h-8 w-8"
             src="/images/favicons/android-chrome-192x192.png"
-            alt="Jrob"
+            alt="Jrob's War Game"
           />
         </div>
         <!-- End logo segment -->
@@ -22,12 +22,14 @@
         </div>
         <!-- End desktop main menu segment -->
       </div>
-      <!-- Start desktop secondary menu segment -->
+      <!-- Start desktop secondary menu segment; make sure we have an authenticated user -->
+      <% if(locals.user) { %>
       <div class="hidden md:block">
         <div class="ml-4 flex items-center md:ml-6">
           <a href="/auth/logout" class="menu-item mr-4">Sign out</a>
-          <img class="h-8 w-8 rounded-full" src="/images/favicons/android-chrome-192x192.png" alt="Jrob">
+          <img class="h-8 w-8 rounded-full" src="https://gravatar.com/avatar/<%= user.hash %>" alt="<%= user.email %>">
       </div>
+      <% } %>
       <!-- End desktop secondary menu segment -->
     </div>
   </div>

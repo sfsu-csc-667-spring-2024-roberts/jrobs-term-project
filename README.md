@@ -3,6 +3,47 @@
 ## User authentication and sessions
 
 <details>
+  <summary>Making user information accessible to all templates</summary>
+
+### Making user information accessible to all templates
+
+We will frequently need user information in our templates. In this example, I will be updating a users avatar anywhere it is displayed on the site using their [gravatar](https://docs.gravatar.com/general/hash/), which requires their email (encrypted, but same idea). This can be done when we check for user authentication in [`backend/middleware/is-authenticated.js`](/backend/middleware/is-authenticated.js):
+
+```js
+import { createHash } from "crypto";
+
+export default function (request, response, next) {
+  if (
+    request.session.user !== undefined &&
+    request.session.user.id !== undefined
+  ) {
+    response.locals.user = {
+      ...request.session.user,
+      hash: createHash("sha256")
+        .update(request.session.user.email)
+        .digest("hex"),
+    };
+
+    next();
+  } else {
+    response.redirect("/");
+  }
+}
+```
+
+Anywhere I use an image of a user, I can update the `src` and `alt` attributes:
+
+```html
+<img
+  class="h-8 w-8 rounded-full"
+  src="https://gravatar.com/avatar/<%= user.hash %>"
+  alt="<%= user.email %>"
+/>
+```
+
+</details>
+
+<details>
   <summary>Signing a user in</summary>
 
 ### Signing a user in

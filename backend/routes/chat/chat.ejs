@@ -5,8 +5,8 @@
       <div class="w-px bg-gray-200"></div>
     </div>
     <img
-      src="/images/favicons/android-chrome-192x192.png"
-      alt=""
+      src="https://gravatar.com/avatar/<%= user.hash %>"
+      alt="<%= user.email %>"
       class="relative h-6 w-6 flex-none rounded-full bg-gray-50"
     />
     <div class="flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200">
@@ -31,8 +31,8 @@
 <!-- New comment form -->
 <div class="mt-6 flex gap-x-3">
   <img
-    src="/images/favicons/android-chrome-192x192.png"
-    alt="Current user's avatar"
+    src="https://gravatar.com/avatar/<%= user.hash %>"
+    alt="<%= user.email %>"
     class="h-6 w-6 flex-none rounded-full bg-gray-50"
   />
   <form action="#" class="relative flex-auto">
