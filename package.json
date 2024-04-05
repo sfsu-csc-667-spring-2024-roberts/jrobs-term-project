@@ -20,11 +20,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "connect-pg-simple": "^9.0.1",
     "cookie-parser": "^1.4.6",
     "dayjs": "^1.11.10",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.9",
     "express": "^4.19.2",
+    "express-session": "^1.18.0",
     "http-errors": "^2.0.0",
     "javascript-time-ago": "^2.5.9",
     "morgan": "^1.10.0",

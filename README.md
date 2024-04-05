@@ -3,9 +3,28 @@
 ## User authentication and sessions
 
 <details>
+  <summary>Installing dependencies</summary>
+
+### Installing dependencies
+
+Begin by install the required packages:
+
+1. [`express-session`](https://www.npmjs.com/package/express-session) is express middleware that creates a session id, and sends that session id in a cookie to the requesting client. On the server, we will associate some information with this session id (like user id). By default, this information is stored in memory, which is _volatile_ - any time the server restarts, the process' memory will be reclaimed, and we will lose all session data (this will be solved with the next package in this list).
+
+   A cookie is simply an HTTP header whose value is defined by the server - in this case, the value is going to be the session id. Whenever the client makes a request to the server, it will automatically send any cookies that it has received from that domain. The `express-session` middleware will automatically look up any information associated with that session id, and make it available in the `request` object in our routes.
+
+2. `connect-pg-simple` is express middleware that automates the storage of session information in our postgres database, allowing our server to persist session information in a non-volatile (i.e. memory) store.
+
+```
+npm install express-session connect-pg-simple
+```
+
+</details>
+
+<details>
   <summary>Cleaning up our code</summary>
 
-### Cleaning up our code
+### [Cleaning up our code](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/389f76f30e72ff7e31f57d14fa164dc8a031251c)
 
 Our [`backend/server.js`] file is becoming a little verbose, and now is a good time to refactor the code to make it more readable and organized. To do this, we will create a new directory named `config`, with individual files to handle setup of different concerns. Each of these files will `export` a function that takes the `express` `app` object as a parameter, along with any other information required from the server to handle configuration for a given concern. In addition to configuration, we can also make our route and middleware imports more concise, by adding a "manifest file" that re-exports individual functions from existing modules in their respective directories.
 
