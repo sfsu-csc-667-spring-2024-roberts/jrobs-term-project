@@ -20,6 +20,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "connect-pg-simple": "^9.0.1",
     "cookie-parser": "^1.4.6",
     "dayjs": "^1.11.10",

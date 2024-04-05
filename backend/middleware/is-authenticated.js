@@ -1,6 +1,8 @@
 export default function (request, response, next) {
-  // TODO we will eventually connect this to our authentication logic
-  if (request.query.showauth) {
+  if (
+    request.session.user !== undefined &&
+    request.session.user.id !== undefined
+  ) {
     next();
   } else {
     response.redirect("/");

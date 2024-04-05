@@ -3,6 +3,123 @@
 ## User authentication and sessions
 
 <details>
+  <summary>Creating a user</summary>
+
+### Creating a user
+
+We need one more dependency for user creation - a package that will securely encrypt user passwords:
+
+```
+npm install bcrypt
+```
+
+We can now hook up the logic for user creation with the registration form. This is going to require some database access logic, which will be created in [`backend/db/users/index.js`](/backend/db/users/index.js):
+
+```js
+import db from "../connection.js";
+
+const Sql = {
+  INSERT:
+    "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email",
+  EXISTS: "SELECT id FROM users WHERE email=$1",
+  // Note that this is ONLY for use in our backend (since it returns the password)
+  FIND: "SELECT * FROM users WHERE email=$1 AND password=$2",
+};
+
+const create = async (email, password) => db.one(Sql.INSERT, [email, password]);
+const exists = async (email) => {
+  return null !== (await db.oneOrNone(Sql.EXISTS, [email]));
+};
+const find = async (email) => {
+  const result = await db.oneOrNone(Sql.FIND, [email, password]);
+
+  if (result === null) {
+    throw "User with those credentials not found";
+  } else {
+    return result;
+  }
+};
+
+export default {
+  create,
+  exists,
+  find,
+};
+```
+
+Since we will be adding multiple files for database access, create a "manifest file" [`backend/db/index.js`](/backend/db/index.js):
+
+```js
+export { default as Users } from "./users/index.js";
+```
+
+Moving on to [`backend/routes/auth/index.js`](/backend/routes/auth/index.js) to add the logic for user creation (I accidentally omitted the `post` route in initial setup):
+
+```js
+router.post("/register", async (request, response) => {
+  const { password, email } = request.body;
+
+  if (await Users.exists(email)) {
+    // The user email already exists in our database
+    response.redirect("/auth/login");
+  } else {
+    const encryptedPassword = await encryptPassword(password);
+
+    request.session.user = await Users.create(email, encryptedPassword);
+    response.redirect("/lobby");
+  }
+});
+```
+
+To keep my route file concise, I added a module to handle the password related functionality at [`backend/routes/auth/password-handling.js`](/backend/routes/auth/password-handling.js):
+
+```js
+import bcrypt from "bcrypt";
+import { Users } from "../../db/index.js";
+
+const SALT_ROUNDS = 10;
+
+export async function encryptPassword(clearTextPassword) {
+  return await bcrypt.hash(clearTextPassword, SALT_ROUNDS);
+}
+
+export async function checkPassword(email, password) {
+  try {
+    const user = await Users.find(email);
+
+    return await bcrypt.compare(password, user.password);
+  } catch (error) {
+    return false;
+  }
+}
+```
+
+Finally, we can tell the [authentication form](/backend/routes/auth/form.ejs) that, when registering, the form should post to the `/auth/register` route.
+
+```html
+<form class="space-y-6" action="/auth/<%= format %>" method="POST">
+  <!-- form content -->
+</form>
+```
+
+You should now be able to browse to the registration form, enter your information, and submit it. This will add a user to the database, and redirect the user to the lobby page. Checking the database, we see a new record is created in the users table, along with a new entry in the sessions table:
+
+```
+jrobs-term-project=# select * from users;
+ id |         email          |                           password                           |         created_at
+----+------------------------+--------------------------------------------------------------+----------------------------
+  1 | roberts.john@gmail.com | $2b$10$WFXJbojVXaWmAHzBplPr3.AP/g9WPssUjKDqcEXHcxkK55bTVKbk2 | 2024-04-05 12:37:14.465868
+(1 row)
+
+               sid                |                                                             sess                                                              |       expire
+----------------------------------+-------------------------------------------------------------------------------------------------------------------------------+---------------------
+ c7_qD9G2g2xIKun3oiwCnkMmRRMrSBTY | {"cookie":{"originalMaxAge":null,"expires":null,"httpOnly":true,"path":"/"},"user":{"id":1,"email":"roberts.john@gmail.com"}} |
+(4 rows)
+```
+
+</details>
+
+<details>
   <summary>The process of creating users</summary>
 
 ### The process of creating users
@@ -11,20 +128,20 @@ We now have everything in place to be able to create and authenticate users. Whe
 
 #### Registration
 
-User registers with the registration form created in our html/css skeleton, providing their userid and password.
+User registers with the registration form created in our html/css skeleton, providing their email and password.
 
-1. Ensure the user does not exist (for this sample application, that means checking to see if the userid already exists in the users table). If the user exists, redirect to the login form (or provide a message indicating that the userid is taken)
+1. Ensure the user does not exist (for this sample application, that means checking to see if the email already exists in the users table). If the user exists, redirect to the login form (or provide a message indicating that the email is taken)
 2. Encrypt the password for storage - passwords should never be stored as clear text, just in case a bad actor gets access to the database
-3. Create an entry in the users table that includes the userid and encrypted password
+3. Create an entry in the users table that includes the email and encrypted password
 4. Update the session with the new user id
 5. Redirect to the lobby page
 
 #### Login
 
-User provides their userid and password in the login form.
+User provides their email and password in the login form.
 
 1. Encrypt the password
-2. Check the users table for an entry containing the userid and encrypted password
+2. Check the users table for an entry containing the email and encrypted password
 3. If an entry exists, update the session with the user id from that record
 4. Redirect to the lobby page
 
