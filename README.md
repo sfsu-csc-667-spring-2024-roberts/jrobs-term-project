@@ -3,9 +3,37 @@
 ## User authentication and sessions
 
 <details>
+  <summary>The process of creating users</summary>
+
+### The process of creating users
+
+We now have everything in place to be able to create and authenticate users. Whenever a user is authenticated, we will update the session to include their user id (which will allow us to update the [`backend/middleware/is-authenticated.js`](/backend/middleware/is-authenticated.js) middleware to check the session for a user id, rather than the querystring hack that has been used to this point).
+
+#### Registration
+
+User registers with the registration form created in our html/css skeleton, providing their userid and password.
+
+1. Ensure the user does not exist (for this sample application, that means checking to see if the userid already exists in the users table). If the user exists, redirect to the login form (or provide a message indicating that the userid is taken)
+2. Encrypt the password for storage - passwords should never be stored as clear text, just in case a bad actor gets access to the database
+3. Create an entry in the users table that includes the userid and encrypted password
+4. Update the session with the new user id
+5. Redirect to the lobby page
+
+#### Login
+
+User provides their userid and password in the login form.
+
+1. Encrypt the password
+2. Check the users table for an entry containing the userid and encrypted password
+3. If an entry exists, update the session with the user id from that record
+4. Redirect to the lobby page
+
+</details>
+
+<details>
   <summary>Session setup</summary>
 
-### Session setup
+### [Session setup](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/25caeead7b0447ced255a4ba61b6a944072f7fe0)
 
 We need to configure the `express-session` middleware, and tell our server about it. We can make use of our newly organized `server.js` file and `config` directory, and add a file for session setup [`backend/config/session.js](/backend/config/session.js) (don't forget to update the "manifest file"):
 
@@ -35,7 +63,6 @@ In this code, the value of `sessionMiddleware` is being cached within the module
 After making a request to the server, the session middleware initializes the table it will be using for session storage (that is what the `createTableIsMissing` configuration is for in the store setup).
 
 ```
-jrobs-term-project=# \dt
 jrobs-term-project=# \dt
               List of relations
  Schema |        Name         | Type  | Owner
