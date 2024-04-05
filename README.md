@@ -3,7 +3,43 @@
 ## User authentication and sessions
 
 <details>
+  <summary>Signing a user in</summary>
+
+### Signing a user in
+
+With users able to register, the sign in logic can now be implemented:
+
+```js
+router.post("/login", async (request, response) => {
+  const { password, email } = request.body;
+
+  try {
+    if (await checkPassword(email, password)) {
+      const user = await Users.find(email);
+      request.session.user = {
+        id: user.id,
+        email: user.email,
+      };
+
+      response.redirect("/lobby");
+    } else {
+      throw "User not found";
+    }
+  } catch (error) {
+    // If we were nice, we would add an error message of some sort
+    response.redirect("/login");
+  }
+});
+```
+
+Make sure that your sign in form posts to the correct route (my implementation handled this in the last step, in [`backend/routes/auth/form.ejs`](/backend/routes/auth/form.ejs)).
+
+</details>
+
+<details>
   <summary>Logging a user out</summary>
+
+### [Logging a user out](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/40229110e40bc243e5aaa323d55cfec0b15b908a)
 
 If you stop your server and restart it, and browse to the `/lobby` page, you should still be logged in. The browser is sending the cookie that `express-session` created back to the server when it makes a request, and the session information that is stored in the database is getting populated into the `request.session` object. This is convenient, but will prevent use from testing or sign in logic, so we will now implement the logic for signing out. This is fairly straightforward - we simply need to tell `express-session` to remove the session information from the database when the `/auth/logout` route is called in [`backend/routes/auth/index.js`](/backend/routes/auth/index.js) (see the `express-session` docs if you're curious about why some of this code was written):
 
