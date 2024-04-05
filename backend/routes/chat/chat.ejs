@@ -1,0 +1,63 @@
+
+<ul role="list" class="space-y-6">
+  <!-- Comment template start -->
+  <li class="relative flex gap-x-4">
+    <div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
+      <div class="w-px bg-gray-200"></div>
+    </div>
+    <img
+      src="/images/favicons/android-chrome-192x192.png"
+      alt=""
+      class="relative h-6 w-6 flex-none rounded-full bg-gray-50"
+    />
+    <div class="flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200">
+      <div class="flex justify-between gap-x-4">
+        <div class="py-0.5 text-xs leading-5 text-gray-500">
+          <span class="font-medium text-gray-900">Jrob</span> said
+        </div>
+        <time
+          datetime="2023-01-23T15:56"
+          class="flex-none py-0.5 text-xs leading-5 text-gray-500"
+          ><%= "3d" %></time
+        >
+      </div>
+      <p class="text-sm leading-6 text-gray-500">
+        Called client, they reassured me the invoice would be paid by the 25th.
+      </p>
+    </div>
+  </li>
+  <!-- Comment template end -->
+</ul>
+
+<!-- New comment form -->
+<div class="mt-6 flex gap-x-3">
+  <img
+    src="/images/favicons/android-chrome-192x192.png"
+    alt="Current user's avatar"
+    class="h-6 w-6 flex-none rounded-full bg-gray-50"
+  />
+  <form action="#" class="relative flex-auto">
+    <div
+      class="overflow-hidden rounded-lg pb-12 shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600"
+    >
+      <label for="comment" class="sr-only">Add your comment</label>
+      <input
+        name="comment"
+        id="comment"
+        class="block w-full resize-none border-0 bg-transparent py-1.5 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+        placeholder="Add your comment..."
+      ></input>
+    </div>
+
+    <div
+      class="absolute inset-x-0 bottom-0 flex flex-row-reverse py-2 pl-3 pr-2 w-full"
+    >
+      <button
+        type="submit"
+        class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+      >
+        Send
+      </button>
+    </div>
+  </form>
+</div>
