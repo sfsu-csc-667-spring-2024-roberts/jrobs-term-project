@@ -8,7 +8,9 @@
           src="https://gravatar.com/avatar/<%= users[0].gravatar %>"
           class="h-10 w-10 rounded-full"
         />
-        <p class="font-bold text-gray-800"><%= users[0].email %></p>
+        <p class="font-bold text-gray-800">
+          <%= users[0].email.substring(0, users[0].email.indexOf("@")) %>
+        </p>
         <div class="justify-self-end text-gray-600 text-xs">
           <% if (users.length === 2) { %> X cards left <% } else { %> Waiting...
           <% } %>
@@ -31,10 +33,12 @@
       <div class="flex flex-col items-center h-full">
         <% if (users.length === 2) { %>
         <img
-          src="/images/favicons/android-chrome-192x192.png"
-          class="h-10 w-10"
+          src="https://gravatar.com/avatar/<%= users[1].gravatar %>"
+          class="h-10 w-10 rounded-full"
         />
-        <p class="font-bold text-gray-800">jrob</p>
+        <p class="font-bold text-gray-800">
+          <%= users[1].email.substring(0, users[1].email.indexOf("@")) %>
+        </p>
         <div class="justify-self-end text-gray-600 text-xs">X cards left</div>
         <% } else { %>
         <div class="justify-self-end text-gray-600 text-xs">Waiting...</div>

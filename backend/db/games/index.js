@@ -6,6 +6,8 @@ const Sql = {
   UPDATE_DESCRIPTION: "UPDATE games SET description=$1 WHERE id=$2",
   ADD_PLAYER:
     "INSERT INTO game_users (game_id, user_id, seat) VALUES ($1, $2, $3)",
+  IS_PLAYER_IN_GAME:
+    "SELECT * FROM game_users WHERE game_users.game_id=$1 AND game_users.user_id=$2",
   GET_GAME: "SELECT * FROM games WHERE id=$1",
   GET_USERS:
     "SELECT users.id, users.email, users.gravatar, game_users.seat FROM users, game_users, games WHERE games.id=$1 AND game_users.game_id=games.id AND game_users.user_id=users.id ORDER BY game_users.seat",
@@ -66,8 +68,16 @@ const available = async (game_id_start = 0, limit = 10, offset = 0) => {
   return games;
 };
 
+const join = async (gameId, userId) => {
+  // This will throw if the user is in the game since I have chosen the `none` method:
+  await db.none(Sql.IS_PLAYER_IN_GAME(gameId, userId));
+
+  await db.none(Sql.ADD_PLAYER, [gameId, userId, 2]);
+};
+
 export default {
   create,
   get,
   available,
+  join,
 };

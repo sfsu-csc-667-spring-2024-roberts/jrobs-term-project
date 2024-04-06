@@ -3,9 +3,62 @@
 ## Lobby logic
 
 <details>
+  <summary>Joining games</summary>
+
+### Joining games
+
+The last piece of functionality we will implement in this section is the ability to join a game (the only other thing in the lobby is chat, and we need sockets for that). This will require the addition of a query in [`backend/db/games/index.js`](/backend/db/games/index.js) to add a user to a game - the html was put in place for this in the last section, when we used the results of the available games query to populate the lobby list. Note that there is a possible race condition in this order of events that we could prevent with some more advanced sql (outside of the scope of this course). Also, I get to hard code the `seat` field because I (intentionally) chose a straightforward game that only allows two players; your logic will likely need to be smarter:
+
+```js
+import db from "../connection.js";
+
+const Sql = {
+  /* existing queries */
+  IS_PLAYER_IN_GAME:
+    "SELECT * FROM game_users WHERE game_users.game_id=$1 AND game_users.user_id=$2",
+};
+
+/* existing logic */
+
+const join = async (gameId, userId) => {
+  // This will throw if the user is in the game since I have chosen the `none` method:
+  await db.none(Sql.IS_PLAYER_IN_GAME(gameId, userId));
+
+  await db.none(Sql.ADD_PLAYER, [gameId, userId, 2]);
+};
+
+export default {
+  create,
+  get,
+  available,
+  join,
+};
+```
+
+In [`backend/routes/games/index.js`](/backend/routes/games/index.js), we add the user to the game with the new query, and redirect to the game page:
+
+```js
+router.post("/join/:id", async (request, response) => {
+  const { id: gameId } = request.params;
+  const { id: userId } = request.session.user;
+
+  try {
+    await Games.join(gameId, userId);
+
+    response.redirect(`/games/${gameId}`);
+  } catch (error) {
+    console.log(error);
+    response.redirect("/lobby");
+  }
+});
+```
+
+</details>
+
+<details>
   <summary>Listing available games</summary>
 
-### Listing available games
+### [Listing available games](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/eff3421c8ab0deeffd53141ff5ab45abf5b785d2)
 
 Note that the logic discussed and written in this section is particular to the game I am creating; this logic will differ from yours! In my game, I can determine which games still need players by looking for any `game_id` in the `game_users` table that only has one row. The query I came up with is ... a little involved ...; feel free to use multiple queries (we're going for the end result, not super performant queries - I suggest a db course if that is interesting to you, but we don't need to optimize until we see a problem).
 

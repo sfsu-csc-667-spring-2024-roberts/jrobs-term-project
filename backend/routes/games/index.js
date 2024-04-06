@@ -23,4 +23,18 @@ router.get("/:id", async (request, response) => {
   response.render("games/games", gameData);
 });
 
+router.post("/join/:id", async (request, response) => {
+  const { id: gameId } = request.params;
+  const { id: userId } = request.session.user;
+
+  try {
+    await Games.join(gameId, userId);
+
+    response.redirect(`/games/${gameId}`);
+  } catch (error) {
+    console.log(error);
+    response.redirect("/lobby");
+  }
+});
+
 export default router;
