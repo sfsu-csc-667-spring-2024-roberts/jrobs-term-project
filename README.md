@@ -1,6 +1,142 @@
 # Term Project Example
 
-## Lobby logic
+## Game setup
+
+<details>
+  <summary>Intialization</summary>
+
+### [Intialization](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/96134615a879a2655fff5a066a9cac1756b8337f)
+
+Our game page still has some hard coded cards - it is now time to actually set up the initial state of the game so that we can implement game logic! In this game, each player will receive half of a shuffled deck of cards. Once again, your logic will likely need to be more complex than this, but the general idea holds:
+
+1. Create a copy of the card deck (from the `standard_deck_cards` table in my db)
+2. Shuffle the cards
+3. Insert the shuffled cards into the `game_cards` deck
+4. Choose the correct point in your logic to initialize (for me, it is when the game is created, and then an update occurs when the second player joins)
+
+In order to create a batch insert query with `pgp`, we need the pgp instance created when we set up our connection. I refactor [`backend/db/connection.js`](/backend/db/connection.js) to provide this:
+
+```js
+import pgp from "pg-promise";
+
+const pgpInstance = pgp();
+const connection = pgpInstance(process.env.DATABASE_URL);
+
+export { pgpInstance as pgp };
+
+export default connection;
+```
+
+Adding the sql to [`backend/db/games/index.js`](/backend/db/games/index.js):
+
+```js
+import db, { pgp } from "../connection.js";
+
+const Sql = {
+  /* existing queries */
+  SHUFFLED_DECK:
+    "SELECT *, random() AS rand FROM standard_deck_cards ORDER BY rand",
+  ASSIGN_CARDS:
+    "UPDATE game_cards SET user_id=$1 WHERE game_id=$2 AND user_id=-1",
+};
+
+const create = async (creatorId, description) => {
+  try {
+    const { id } = await db.one(Sql.CREATE, [
+      creatorId,
+      description || "placeholder",
+      1,
+    ]);
+
+    if (description === undefined || description.length === 0) {
+      await db.none(Sql.UPDATE_DESCRIPTION, [`Game ${id}`, id]);
+    }
+
+    await db.none(Sql.ADD_PLAYER, [id, creatorId, 1]);
+
+    await initialize(gameId, creatorId); // ADDED THIS
+
+    return id;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+/* existing logic */
+
+const join = async (gameId, userId) => {
+  // This will throw if the user is in the game since I have chosen the `none` method:
+  await db.none(Sql.IS_PLAYER_IN_GAME, [gameId, userId]);
+
+  await db.none(Sql.ADD_PLAYER, [gameId, userId, 2]);
+  await db.none(Sql.ASSIGN_CARDS, [userId, gameId]); // ADDED THIS
+};
+
+const initialize = async (gameId, creatorId) => {
+  const deck = await db.any(Sql.SHUFFLED_DECK);
+
+  const columns = new pgp.helpers.ColumnSet(
+    ["user_id", "game_id", "card_id", "card_order"],
+    { table: "game_cards" },
+  );
+  const values = deck.map(({ id }, index) => ({
+    user_id: index % 2 === 0 ? creatorId : -1,
+    game_id: gameId,
+    card_id: id,
+    card_order: Math.floor(index / 2),
+  }));
+
+  const query = pgp.helpers.insert(values, columns);
+
+  await db.none(query);
+};
+
+export default {
+  create,
+  get,
+  available,
+  join,
+};
+```
+
+Now, when a player creates a game, `game_cards` is populated with the shuffled set of cards for each player in the game (with the second player getting a placeholder value of -1 until they join):
+
+```
+jrobs-term-project=# select * from game_cards where game_id=20;
+
+ user_id | game_id | card_id | card_order
+---------+---------+---------+------------
+       5 |      20 |      10 |          0
+      -1 |      20 |       6 |          0
+       5 |      20 |      33 |          1
+      -1 |      20 |       3 |          1
+       5 |      20 |       1 |          2
+      -1 |      20 |      37 |          2
+       5 |      20 |      35 |          3
+      -1 |      20 |      21 |          3
+... etc
+```
+
+And after the second player has joined:
+
+```
+jrobs-term-project=# select * from game_cards where game_id=20;
+
+ user_id | game_id | card_id | card_order
+---------+---------+---------+------------
+       5 |      20 |      40 |         22
+       5 |      20 |      50 |         23
+       5 |      20 |      41 |         24
+       5 |      20 |      17 |         25
+       4 |      20 |       6 |          0
+       4 |      20 |       3 |          1
+       4 |      20 |      37 |          2
+```
+
+</details>
+
+## [Lobby logic](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/6c36aab3220f396acca0a312ea50c688f01538b8)
 
 <details>
   <summary>Joining games</summary>
@@ -22,7 +158,7 @@ const Sql = {
 
 const join = async (gameId, userId) => {
   // This will throw if the user is in the game since I have chosen the `none` method:
-  await db.none(Sql.IS_PLAYER_IN_GAME(gameId, userId));
+  await db.none(Sql.IS_PLAYER_IN_GAME, [gameId, userId]);
 
   await db.none(Sql.ADD_PLAYER, [gameId, userId, 2]);
 };

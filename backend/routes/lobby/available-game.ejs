@@ -5,7 +5,7 @@
     <img
       class="h-10 w-10 flex-shrink-0 rounded-full bg-gray-300"
       src="https://gravatar.com/avatar/<%= game.gravatar %>"
-      alt="Created by "
+      alt="Created by <%= game.email.substring(0, game.email.indexOf("@")) %>"
     />
   </div>
   <div

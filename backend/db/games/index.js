@@ -1,4 +1,4 @@
-import db from "../connection.js";
+import db, { pgp } from "../connection.js";
 
 const Sql = {
   CREATE:
@@ -24,6 +24,15 @@ const Sql = {
     LIMIT $[limit]
     OFFSET $[offset]
   `,
+  SHUFFLED_DECK:
+    "SELECT *, random() AS rand FROM standard_deck_cards ORDER BY rand",
+  ASSIGN_CARDS:
+    "UPDATE game_cards SET user_id=$1 WHERE game_id=$2 AND user_id=-1",
+  GET_CARDS: `
+    SELECT * FROM game_cards, standard_deck_cards
+    WHERE game_cards.game_id=$1 AND game_cards.card_id=standard_deck_cards.id
+    ORDER BY game_cards.card_order
+    GROUP BY game_cards.user_id`,
 };
 
 const create = async (creatorId, description) => {
@@ -39,6 +48,8 @@ const create = async (creatorId, description) => {
     }
 
     await db.none(Sql.ADD_PLAYER, [id, creatorId, 1]);
+
+    await initialize(id, creatorId);
 
     return id;
   } catch (error) {
@@ -70,9 +81,29 @@ const available = async (game_id_start = 0, limit = 10, offset = 0) => {
 
 const join = async (gameId, userId) => {
   // This will throw if the user is in the game since I have chosen the `none` method:
-  await db.none(Sql.IS_PLAYER_IN_GAME(gameId, userId));
+  await db.none(Sql.IS_PLAYER_IN_GAME, [gameId, userId]);
 
   await db.none(Sql.ADD_PLAYER, [gameId, userId, 2]);
+  await db.none(Sql.ASSIGN_CARDS, [userId, gameId]);
+};
+
+const initialize = async (gameId, creatorId) => {
+  const deck = await db.any(Sql.SHUFFLED_DECK);
+
+  const columns = new pgp.helpers.ColumnSet(
+    ["user_id", "game_id", "card_id", "card_order"],
+    { table: "game_cards" },
+  );
+  const values = deck.map(({ id }, index) => ({
+    user_id: index % 2 === 0 ? creatorId : -1,
+    game_id: gameId,
+    card_id: id,
+    card_order: Math.floor(index / 2),
+  }));
+
+  const query = pgp.helpers.insert(values, columns);
+
+  await db.none(query);
 };
 
 export default {
