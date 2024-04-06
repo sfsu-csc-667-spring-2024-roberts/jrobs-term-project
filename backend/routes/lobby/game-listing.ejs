@@ -1,12 +1,11 @@
+<template id="available-game-template">
+  <%- include("available-game", { game: { id: -1, gravatar: ""}}) %>
+</template>
 <ul
   role="list"
   class="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-2"
 >
-  <%- include("available-game") %>
-  <%- include("available-game") %>
-  <%-
-  include("available-game") %>
-  <%- include("available-game") %>
-  <%-
-  include("available-game") %>
+  <% availableGames.forEach(game => { %>
+  <%- include("available-game", { game }) %>
+  <% }) %>
 </ul>

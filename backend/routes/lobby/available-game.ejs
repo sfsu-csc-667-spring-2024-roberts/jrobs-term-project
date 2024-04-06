@@ -4,8 +4,8 @@
   >
     <img
       class="h-10 w-10 flex-shrink-0 rounded-full bg-gray-300"
-      src="/images/favicons/android-chrome-192x192.png"
-      alt="Created By"
+      src="https://gravatar.com/avatar/<%= game.gravatar %>"
+      alt="Created by "
     />
   </div>
   <div
@@ -13,32 +13,24 @@
   >
     <div class="flex-1 truncate px-4 py-2 text-sm">
       <p class="font-medium text-gray-900 hover:text-gray-600">
-        Brief game description
+        <%= game.description %>
       </p>
       <div class="mt-2">
         <span
           class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"
-          >X Playing</span
-        >
-        <span
-          class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-          >Y Watching</span
+          >1 Playing (Waiting for more)</span
         >
       </div>
     </div>
     <div class="pr-5 flex flex-col">
-      <button
-        type="button"
-        class="rounded bg-blue-700 px-2 py-1 text-xs font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 mb-1"
-      >
-        Join
-      </button>
-      <button
-        type="button"
-        class="rounded bg-green-600 px-2 py-1 text-xs font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
-      >
-        Watch
-      </button>
+      <form action="/games/join/<%= game.id %>" method="post">
+        <button
+          type="submit"
+          class="rounded bg-blue-700 px-2 py-1 text-xs font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 mb-1"
+        >
+          Join
+        </button>
+      </form>
     </div>
   </div>
 </li>

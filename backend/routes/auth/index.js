@@ -35,6 +35,7 @@ router.post("/login", async (request, response) => {
       request.session.user = {
         id: user.id,
         email: user.email,
+        gravatar: user.gravatar,
       };
 
       response.redirect("/lobby");

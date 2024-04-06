@@ -3,9 +3,71 @@
 ## Lobby logic
 
 <details>
+  <summary>Listing available games</summary>
+
+### Listing available games
+
+Note that the logic discussed and written in this section is particular to the game I am creating; this logic will differ from yours! In my game, I can determine which games still need players by looking for any `game_id` in the `game_users` table that only has one row. The query I came up with is ... a little involved ...; feel free to use multiple queries (we're going for the end result, not super performant queries - I suggest a db course if that is interesting to you, but we don't need to optimize until we see a problem).
+
+These are my additions to [`backend/db/games/index.js`](/backend/db/games/index.js):
+
+```js
+import db from "../connection.js";
+
+const Sql = {
+  /* Existing queries */
+  GET_AVAILABLE: `
+    SELECT games.*, users.email, users.gravatar FROM games
+    INNER JOIN (
+        SELECT game_users.game_id
+        FROM game_users GROUP BY game_id
+        HAVING COUNT(*) < 2
+    ) AS temp ON games.id=temp.game_id
+    LEFT JOIN users ON users.id=games.creator_id
+    WHERE games.id > $[game_id_start]
+    ORDER BY games.id
+    LIMIT $[limit]
+    OFFSET $[offset]
+  `,
+};
+
+/* Existing code */
+
+const available = async (game_id_start = 0, limit = 10, offset = 0) => {
+  const games = await db.any(Sql.GET_AVAILABLE, {
+    game_id_start,
+    limit,
+    offset,
+  });
+
+  return games;
+};
+
+export default {
+  create,
+  get,
+  available,
+};
+```
+
+One thing I will highlight is the use of `limit` and `offset` clauses, with an `order by games.id` - this means later, if I want to, I will be able to paginate based on the _last game id I saw_, which could come in handy.
+
+The [`backend/routes/games/index.js`](/backend/routes/games/index.js) route was updated to use the new `available` query, and the [`backend/routes/games/games.ejs`](/backend/routes/games/games.ejs) template was updated to use the results of this query.
+
+I also snuck in some html that I may want later on for dynamically adding games to the available game list. Feel free to skip this for now, I will point it out again when we come to it:
+
+```html
+<template id="available-game-template">
+  <%- include("available-game", { game: { id: -1, gravatar: ""}}) %>
+</template>
+```
+
+</details>
+
+<details>
   <summary>Creating games</summary>
 
-### Creating games
+### [Creating games](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/dfeecbef16979c2a3253ab31a8b7fd6149380202)
 
 My html skeleton already included a button for creating games; I have updated it to include an input, and to wrap both the input and the button in a form element. You may require more advanced logic (for example, a dialog) to allow users to create a game. The form will post to a new route, `create`, in the [`backend/routes/games/index.js`](/backend/routes/games/index.js) route. On successful completion of a game, the user will be redirected the new game page. All of this requires some additional database logic ([`backend/db/games/index.js`](/backend/db/games/index.js)) for creating a game and adding the user that created the game to the `game_users` table.
 

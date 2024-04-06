@@ -9,6 +9,19 @@ const Sql = {
   GET_GAME: "SELECT * FROM games WHERE id=$1",
   GET_USERS:
     "SELECT users.id, users.email, users.gravatar, game_users.seat FROM users, game_users, games WHERE games.id=$1 AND game_users.game_id=games.id AND game_users.user_id=users.id ORDER BY game_users.seat",
+  GET_AVAILABLE: `
+    SELECT games.*, users.email, users.gravatar FROM games
+    INNER JOIN (
+        SELECT game_users.game_id
+        FROM game_users GROUP BY game_id
+        HAVING COUNT(*) < 2
+    ) AS temp ON games.id=temp.game_id
+    LEFT JOIN users ON users.id=games.creator_id
+    WHERE games.id > $[game_id_start]
+    ORDER BY games.id
+    LIMIT $[limit]
+    OFFSET $[offset]
+  `,
 };
 
 const create = async (creatorId, description) => {
@@ -43,7 +56,18 @@ const get = async (gameId) => {
   };
 };
 
+const available = async (game_id_start = 0, limit = 10, offset = 0) => {
+  const games = await db.any(Sql.GET_AVAILABLE, {
+    game_id_start,
+    limit,
+    offset,
+  });
+
+  return games;
+};
+
 export default {
   create,
   get,
+  available,
 };
