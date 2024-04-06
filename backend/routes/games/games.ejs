@@ -12,8 +12,8 @@
           <%= users[0].email.substring(0, users[0].email.indexOf("@")) %>
         </p>
         <div class="justify-self-end text-gray-600 text-xs">
-          <% if (users.length === 2) { %> X cards left <% } else { %> Waiting...
-          <% } %>
+          <% if (users.length === 2) { %> <%= users[0].cardCount %> cards left
+          <% } else { %> Waiting... <% } %>
         </div>
       </div>
     </div>
@@ -21,11 +21,9 @@
       <div class="card card-facedown"><span></span></div>
     </div>
     <div class="basis-1/6 flex justify-end">
-      <div class="card card-hearts card-9"><span></span></div>
+      <div class="basis-1/6 flex"><%- include("blank-card") %></div>
     </div>
-    <div class="basis-1/6 flex">
-      <div class="card card-hearts card-9"><span></span></div>
-    </div>
+    <div class="basis-1/6 flex"><%- include("blank-card") %></div>
     <div class="basis-1/6 flex justify-end">
       <div class="card card-facedown"><span></span></div>
     </div>
@@ -39,7 +37,9 @@
         <p class="font-bold text-gray-800">
           <%= users[1].email.substring(0, users[1].email.indexOf("@")) %>
         </p>
-        <div class="justify-self-end text-gray-600 text-xs">X cards left</div>
+        <div class="justify-self-end text-gray-600 text-xs">
+          <%= users[1].cardCount %> cards left
+        </div>
         <% } else { %>
         <div class="justify-self-end text-gray-600 text-xs">Waiting...</div>
         <% } %>

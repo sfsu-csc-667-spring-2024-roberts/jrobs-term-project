@@ -3,9 +3,75 @@
 ## Game setup
 
 <details>
+  <summary>Fetching game state</summary>
+
+### Fetching game state
+
+All the pieces are in place to be able to create an object that represents the entire game state. Previously, our `get` method in our games database logic only included user information; we can now update this to include the card information. I made some changes to templates that I won't add here; the relevant state updates are happening in [`backend/db/games/index.js`](/backend/db/games/index.js):
+
+```js
+import db, { pgp } from "../connection.js";
+
+const Sql = {
+  /* existing logic */
+  GET_CARDS: `
+    SELECT * FROM game_cards, standard_deck_cards
+    WHERE game_cards.game_id=$1 AND game_cards.card_id=standard_deck_cards.id
+    ORDER BY game_cards.card_order`,
+};
+
+/* existing logic */
+
+const get = async (gameId) => {
+  const [game, users, cards] = await Promise.all([
+    db.one(Sql.GET_GAME, [gameId]),
+    db.any(Sql.GET_USERS, [gameId]),
+    db.any(Sql.GET_CARDS, [gameId]),
+  ]);
+
+  // We may not have a second user yet
+  const playerOneCards = cards.filter((card) => card.user_id === users[0].id);
+
+  const userData = [
+    {
+      ...users[0],
+      cards: playerOneCards,
+      cardCount: playerOneCards.length,
+    },
+  ];
+
+  if (users.length === 2) {
+    const playerTwoCards = cards.filter((card) => card.user_id === users[1].id);
+
+    userData.push({
+      ...users[1],
+      cards: playerTwoCards,
+      cardCount: playerTwoCards.length,
+    });
+  }
+
+  return {
+    ...game,
+    users: userData,
+  };
+};
+
+/* existing logic */
+
+export default {
+  create,
+  get,
+  available,
+  join,
+};
+```
+
+</details>
+
+<details>
   <summary>Intialization</summary>
 
-### [Intialization](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/96134615a879a2655fff5a066a9cac1756b8337f)
+### [Intialization](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/b6e12cc4ea2bf9d54cd2e15bc892bcd50e67db1e)
 
 Our game page still has some hard coded cards - it is now time to actually set up the initial state of the game so that we can implement game logic! In this game, each player will receive half of a shuffled deck of cards. Once again, your logic will likely need to be more complex than this, but the general idea holds:
 
@@ -136,12 +202,12 @@ jrobs-term-project=# select * from game_cards where game_id=20;
 
 </details>
 
-## [Lobby logic](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/6c36aab3220f396acca0a312ea50c688f01538b8)
+## Lobby logic
 
 <details>
   <summary>Joining games</summary>
 
-### Joining games
+### [Joining games](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/6c36aab3220f396acca0a312ea50c688f01538b8)
 
 The last piece of functionality we will implement in this section is the ability to join a game (the only other thing in the lobby is chat, and we need sockets for that). This will require the addition of a query in [`backend/db/games/index.js`](/backend/db/games/index.js) to add a user to a game - the html was put in place for this in the last section, when we used the results of the available games query to populate the lobby list. Note that there is a possible race condition in this order of events that we could prevent with some more advanced sql (outside of the scope of this course). Also, I get to hard code the `seat` field because I (intentionally) chose a straightforward game that only allows two players; your logic will likely need to be smarter:
 

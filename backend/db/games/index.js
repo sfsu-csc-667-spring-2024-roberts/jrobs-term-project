@@ -31,8 +31,7 @@ const Sql = {
   GET_CARDS: `
     SELECT * FROM game_cards, standard_deck_cards
     WHERE game_cards.game_id=$1 AND game_cards.card_id=standard_deck_cards.id
-    ORDER BY game_cards.card_order
-    GROUP BY game_cards.user_id`,
+    ORDER BY game_cards.card_order`,
 };
 
 const create = async (creatorId, description) => {
@@ -59,13 +58,36 @@ const create = async (creatorId, description) => {
 };
 
 const get = async (gameId) => {
-  // We could use a join, but it gets nasty quickly
-  const game = await db.one(Sql.GET_GAME, [gameId]);
-  const users = await db.any(Sql.GET_USERS, [gameId]);
+  const [game, users, cards] = await Promise.all([
+    db.one(Sql.GET_GAME, [gameId]),
+    db.any(Sql.GET_USERS, [gameId]),
+    db.any(Sql.GET_CARDS, [gameId]),
+  ]);
+
+  // We may not have a second user yet
+  const playerOneCards = cards.filter((card) => card.user_id === users[0].id);
+
+  const userData = [
+    {
+      ...users[0],
+      cards: playerOneCards,
+      cardCount: playerOneCards.length,
+    },
+  ];
+
+  if (users.length === 2) {
+    const playerTwoCards = cards.filter((card) => card.user_id === users[1].id);
+
+    userData.push({
+      ...users[1],
+      cards: playerTwoCards,
+      cardCount: playerTwoCards.length,
+    });
+  }
 
   return {
     ...game,
-    users,
+    users: userData,
   };
 };
 
