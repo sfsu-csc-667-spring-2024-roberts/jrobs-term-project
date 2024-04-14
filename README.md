@@ -3,6 +3,283 @@
 ## Socket setup
 
 <details>
+  <summary>Sending messages from server to client (setting up lobby chat)</summary>
+
+### Sending messages from server to client (setting up lobby chat)
+
+This is a rather larger section because we are beginning to tie together a number of different application elements that we have created in isolation.
+
+I'm going to start by getting some organization out of the way. To keep front end code organized, I will implement all of my socket message handling in individual functions in the `frontend/messages` directory. All of the event handling logic for the front end (like form submission or button click handlers) will be implemented as individual functions in the `frontend/event-handlers` directory. In both cases, a function will be returned that can be invoked from the front end index file to set up the respective logic. Note that a manifest file is provided in each directory that will export an array of functions (we will come back to the content of these files shortly):
+
+```
+frontend
+├── css
+│   └── main.css
+├── event-handlers
+│   ├── chat-message-form-submission.ts
+│   └── index.ts
+├── index.ts
+└── messages
+    ├── chat-message.ts
+    └── index.ts
+```
+
+For the backend organization, I will add an `api` directory to `backend/routes` where I can put some generic api calls I need in the front end. In `backend/routes/api` and `backend/routes/chat`, I will add the index files for the routes, and add them to the manifest file [`backend/routes/index.js`](/backend/routes/index.js).
+
+```js
+backend
+├── routes
+│   ├── api
+│   │   └── index.js
+│   ├── chat
+│   │   ├── chat-message.ejs
+│   │   ├── chat.ejs
+│   │   └── index.js
+```
+
+My api will, for now, implement a single route that allows the client to get the room id that should be used for the chat room - this allows the client to send a chat message to the correct room:
+
+```js
+import express from "express";
+
+const router = express.Router();
+
+router.post("/room-id", async (request, response) => {
+  const { referer } = request.headers;
+
+  if (referer.includes("lobby")) {
+    response.json({ roomId: 0 });
+  } else {
+    const idIndex = referer.lastIndexOf("/");
+    const roomId = parseInt(referer.slice(idIndex + 1));
+
+    response.json({ roomId });
+  }
+});
+
+export default router;
+```
+
+The chat router will implement the route to receive and then broadcast a message (note that I added a [`backend/sockets/constants.js`](/backend/sockets/constants.js) to be able to share message names between the front end and back end). Note that we would probably want to implement some sort of authorization here to ensure that users are only sending messages to channels they belong to (i.e. either 0 for lobby, or that the user is associated with the game id):
+
+```js
+import express from "express";
+
+import { CHAT_MESSAGE } from "../../sockets/constants.js";
+
+const router = express.Router();
+
+router.post("/:id", async (request, response) => {
+  const { id: roomId } = request.params;
+  const { message } = request.body;
+  const { email: senderEmail, gravatar } = request.session.user;
+
+  request.app
+    .get("io")
+    .emit(CHAT_MESSAGE, { roomId, message, senderEmail, gravatar, timestamp: new Date() });
+
+  response.status(200).send();
+});
+
+export default router;
+```
+
+```js
+// backend/sockets/constants.js
+export const CHAT_MESSAGE = "chat:message";
+```
+
+```js
+// Added to backend/routes/index.js manifest file
+export { default as chat } from "./chat/index.js";
+export { default as api } from "./api/index.js";
+```
+
+```js
+// Added after existing route setup in backend/server.js
+app.use("/api", routes.api);
+app.use("/chat", routes.chat);
+```
+
+```html
+<!-- Removed static content from chat.ejs and styled a little more, adding in the template element from chat-message.ejs -->
+<div class="flex flex-col h-[calc(100vh-100px)]">
+  <%- include('chat-message.ejs') %>
+  <ul role="list" class="flex flex-col flex-1 overflow-y-scroll" id="chat-message-area"></ul>
+
+  <!-- New comment form -->
+  <div class="mt-6 flex gap-x-3 justify-self-end">
+    <img
+      src="https://gravatar.com/avatar/<%= user.gravatar %>"
+      alt="<%= user.email %>"
+      class="h-6 w-6 flex-none rounded-full bg-gray-50"
+    />
+    <form method="post" id="chat-message-form" class="relative flex-auto">
+      <div
+        class="overflow-hidden rounded-lg pb-12 shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600"
+      >
+        <label for="comment" class="sr-only">Add your comment</label>
+        <input
+          name="message"
+          id="message"
+          class="block w-full resize-none border-0 bg-transparent py-1.5 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+          placeholder="Add your message..."
+        />
+      </div>
+
+      <div class="absolute inset-x-0 bottom-0 flex flex-row-reverse py-2 pl-3 pr-2 w-full">
+        <button
+          type="submit"
+          class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+        >
+          Send
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+```
+
+```html
+<!-- Template for chat messages -->
+<template id="chat-message-template">
+  <li class="relative flex gap-x-4 pb-6">
+    <div class="absolute left-0 top-0 flex w-6 z-0 justify-center bottom-0">
+      <div class="w-px bg-gray-200"></div>
+    </div>
+    <img src="REPLACE" alt="REPLACE" class="relative h-6 w-6 flex-none rounded-full bg-gray-50" />
+    <div class="flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200">
+      <div class="flex justify-between gap-x-4">
+        <div class="py-0.5 text-xs leading-5 text-gray-500">
+          <span class="font-medium text-gray-900 chat-message-username">REPLACE</span>
+          said
+        </div>
+        <time datetime="REPLACE" class="flex-none py-0.5 text-xs leading-5 text-gray-500"></time>
+      </div>
+      <p class="text-sm leading-6 text-gray-500 chat-message-body">REPLACE</p>
+    </div>
+  </li>
+</template>
+```
+
+The client side socket instance will be configured to listen for specific messages, and to execute some code when that action is received.
+
+First, the event handler for the form submission in [`frontend/event-handlers/chat-message-form-submission.ts`](/frontend/event-handlers/chat-message-form-submission.ts). Pay attention to the fact that _we do not care what the response from the server is_ (well, so long as its a success) - the server will be responsible for ensuring that the message gets sent to the correct clients; this is not the job of the client!
+
+```ts
+const form = document.querySelector("form#chat-message-form") as HTMLFormElement;
+
+export const handle = () => {
+  if (form) {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const elements = (event.target as HTMLFormElement).elements;
+      const input = elements.namedItem("message") as HTMLInputElement;
+
+      const message = input.value;
+      input.value = "";
+
+      const { roomId } = await fetch("/api/room-id", { method: "post" }).then((res) => res.json());
+
+      await fetch(`/chat/${roomId}`, {
+        method: "post",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+    });
+  }
+};
+```
+
+```ts
+// frontend/event-handlers/index.ts
+import { handle as handleFormSubmission } from "./chat-message-form-submission";
+
+export default [handleFormSubmission];
+```
+
+Next, the message handler to update the user's interface whenever a chat message is received will obtain references to the message area, and the message template. Notice that the references are obtained _before_ the function definition - we want to do this once, when this module is loaded, rather than each time the function is executed to avoid adding any overhead to each function call. The `<template>` element us hidden on the page, but can be obtained with its `id`, and "cloned" to provide our code with a document fragment copy of the template, which we can then fill out as needed:
+
+```ts
+import { Socket } from "socket.io-client";
+import { format, render } from "timeago.js";
+
+import { CHAT_MESSAGE } from "../../backend/sockets/constants";
+
+export type ChatMessage = {
+  roomId: string;
+  message: string;
+  senderEmail: string;
+  gravatar: string;
+  timestamp: number;
+};
+
+const messageArea = document.querySelector<HTMLElement>("#chat-message-area");
+const messageTemplate = document.querySelector<HTMLTemplateElement>("#chat-message-template");
+
+export default function (socket: Socket) {
+  socket.on(CHAT_MESSAGE, ({ roomId, message, senderEmail, gravatar, timestamp }: ChatMessage) => {
+    if (messageTemplate === null || messageArea === null) {
+      console.error("Chat functionality not configured on this page");
+      return;
+    }
+
+    const messageElement = messageTemplate.content.cloneNode(true) as HTMLElement;
+
+    const img = messageElement.querySelector<HTMLImageElement>("img");
+    img!.src = `https://gravatar.com/avatar/${gravatar}`;
+    img!.alt = `${senderEmail}'s gravatar`;
+
+    const userName = messageElement.querySelector<HTMLElement>("span.chat-message-username");
+    userName!.textContent = senderEmail.substring(0, senderEmail.indexOf("@"));
+
+    const timestampElement = messageElement.querySelector<HTMLTimeElement>("time");
+    timestampElement!.dateTime = timestamp.toString();
+    render(timestampElement!);
+
+    const content = messageElement.querySelector<HTMLElement>(".chat-message-body");
+    content!.textContent = message;
+
+    messageArea.insertBefore(messageElement, messageArea.firstChild);
+    messageArea.scrollTop = messageArea.scrollHeight;
+  });
+}
+```
+
+```ts
+// frontend/messages/index.ts
+import { default as chatMessageHandler } from "./chat-message";
+
+export default [chatMessageHandler];
+```
+
+Update the frontend's code entry point ([`frontend/index.ts`](/frontend/index.ts)) to set up the event and message handlers (and add some type information, if you're into that):
+
+```ts
+import { Socket, io } from "socket.io-client";
+
+import handlers from "./event-handlers";
+import messageHandlers from "./messages";
+
+// Provides us with type information on the io object
+declare global {
+  interface Window {
+    socket: Socket;
+  }
+}
+
+window.socket = io();
+
+handlers.forEach((handler) => handler());
+messageHandlers.forEach((handler) => handler(window.socket));
+```
+
+You should now be able to see updates in the message area as different users post messages!
+
+</details>
+
+<details>
   <summary>Installing Socket.IO</summary>
 
 ### Installing socket.io

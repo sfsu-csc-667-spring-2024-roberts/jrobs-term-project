@@ -43,6 +43,8 @@ app.use(middleware.isAuthenticated);
 app.use(middleware.menuItemsAuthenticated);
 app.use("/lobby", routes.lobby);
 app.use("/games", routes.games);
+app.use("/api", routes.api);
+app.use("/chat", routes.chat);
 
 server.listen(PORT, () => {
   console.log(

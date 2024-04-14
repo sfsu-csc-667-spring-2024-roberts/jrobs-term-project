@@ -1,62 +1,39 @@
-<ul role="list" class="space-y-6">
-  <!-- Comment template start -->
-  <li class="relative flex gap-x-4">
-    <div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
-      <div class="w-px bg-gray-200"></div>
-    </div>
+<div class="flex flex-col h-[calc(100vh-100px)]">
+  <%- include('chat-message.ejs') %>
+  <ul
+    role="list"
+    class="flex flex-col-reverse flex-1 overflow-y-scroll"
+    id="chat-message-area"
+  ></ul>
+
+  <!-- New comment form -->
+  <div class="mt-0 flex gap-x-3 justify-self-end">
     <img
       src="https://gravatar.com/avatar/<%= user.gravatar %>"
       alt="<%= user.email %>"
-      class="relative h-6 w-6 flex-none rounded-full bg-gray-50"
+      class="h-6 w-6 flex-none rounded-full bg-gray-50"
     />
-    <div class="flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200">
-      <div class="flex justify-between gap-x-4">
-        <div class="py-0.5 text-xs leading-5 text-gray-500">
-          <span class="font-medium text-gray-900">Jrob</span> said
-        </div>
-        <time
-          datetime="2023-01-23T15:56"
-          class="flex-none py-0.5 text-xs leading-5 text-gray-500"
-          ><%= "3d" %></time
-        >
-      </div>
-      <p class="text-sm leading-6 text-gray-500">
-        Called client, they reassured me the invoice would be paid by the 25th.
-      </p>
-    </div>
-  </li>
-  <!-- Comment template end -->
-</ul>
-
-<!-- New comment form -->
-<div class="mt-6 flex gap-x-3">
-  <img
-    src="https://gravatar.com/avatar/<%= user.gravatar %>"
-    alt="<%= user.email %>"
-    class="h-6 w-6 flex-none rounded-full bg-gray-50"
-  />
-  <form action="#" class="relative flex-auto">
-    <div
-      class="overflow-hidden rounded-lg pb-12 shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600"
-    >
-      <label for="comment" class="sr-only">Add your comment</label>
-      <input
-        name="comment"
-        id="comment"
-        class="block w-full resize-none border-0 bg-transparent py-1.5 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
-        placeholder="Add your comment..."
-      />
-    </div>
-
-    <div
-      class="absolute inset-x-0 bottom-0 flex flex-row-reverse py-2 pl-3 pr-2 w-full"
-    >
-      <button
-        type="submit"
-        class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+    <form method="post" id="chat-message-form" class="relative flex-auto">
+      <div
+        class="overflow-hidden rounded-lg pb-12 shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600"
       >
-        Send
-      </button>
-    </div>
-  </form>
+        <label for="comment" class="sr-only">Add your comment</label>
+        <input
+          name="message"
+          id="message"
+          class="block w-full resize-none border-0 bg-transparent py-1.5 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+          placeholder="Add your message..."
+        />
+      </div>
+
+      <div class="absolute inset-x-0 bottom-0 flex flex-row-reverse py-2 pl-3 pr-2 w-full">
+        <button
+          type="submit"
+          class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+        >
+          Send
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
