@@ -5,7 +5,7 @@
 <details>
   <summary>Sending messages from server to client (setting up lobby chat)</summary>
 
-### Sending messages from server to client (setting up lobby chat)
+### [Sending messages from server to client (setting up lobby chat)](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/1b42f929bd8934979b483f7ca4a4316dde695a9a)
 
 This is a rather larger section because we are beginning to tie together a number of different application elements that we have created in isolation.
 
@@ -282,7 +282,7 @@ You should now be able to see updates in the message area as different users pos
 <details>
   <summary>Installing Socket.IO</summary>
 
-### Installing socket.io
+### [Installing socket.io](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/fbb218e053bbf095ab36c61de7e609ec6e49ba25)
 
 With much of the game logic set up, we can now add [socket.io](https://socket.io/).
 
@@ -391,7 +391,7 @@ If we peek at the session table:
 <details>
   <summary>Fetching game state</summary>
 
-### Fetching game state
+### [Fetching game state](https://github.com/sfsu-csc-667-spring-2024-roberts/jrobs-term-project/commit/df6dcb17d77521388935d0f617a601db2f1dfee6)
 
 All the pieces are in place to be able to create an object that represents the entire game state. Previously, our `get` method in our games database logic only included user information; we can now update this to include the card information. I made some changes to templates that I won't add here; the relevant state updates are happening in [`backend/db/games/index.js`](/backend/db/games/index.js):
 

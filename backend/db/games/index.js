@@ -1,11 +1,9 @@
 import db, { pgp } from "../connection.js";
 
 const Sql = {
-  CREATE:
-    "INSERT INTO games (creator_id, description) VALUES ($1, $2) RETURNING id",
+  CREATE: "INSERT INTO games (creator_id, description) VALUES ($1, $2) RETURNING id",
   UPDATE_DESCRIPTION: "UPDATE games SET description=$1 WHERE id=$2",
-  ADD_PLAYER:
-    "INSERT INTO game_users (game_id, user_id, seat) VALUES ($1, $2, $3)",
+  ADD_PLAYER: "INSERT INTO game_users (game_id, user_id, seat) VALUES ($1, $2, $3)",
   IS_PLAYER_IN_GAME:
     "SELECT * FROM game_users WHERE game_users.game_id=$1 AND game_users.user_id=$2",
   GET_GAME: "SELECT * FROM games WHERE id=$1",
@@ -20,14 +18,13 @@ const Sql = {
     ) AS temp ON games.id=temp.game_id
     LEFT JOIN users ON users.id=games.creator_id
     WHERE games.id > $[game_id_start]
+    AND users.id != $[user_id]
     ORDER BY games.id
     LIMIT $[limit]
     OFFSET $[offset]
   `,
-  SHUFFLED_DECK:
-    "SELECT *, random() AS rand FROM standard_deck_cards ORDER BY rand",
-  ASSIGN_CARDS:
-    "UPDATE game_cards SET user_id=$1 WHERE game_id=$2 AND user_id=-1",
+  SHUFFLED_DECK: "SELECT *, random() AS rand FROM standard_deck_cards ORDER BY rand",
+  ASSIGN_CARDS: "UPDATE game_cards SET user_id=$1 WHERE game_id=$2 AND user_id=-1",
   GET_CARDS: `
     SELECT * FROM game_cards, standard_deck_cards
     WHERE game_cards.game_id=$1 AND game_cards.card_id=standard_deck_cards.id
@@ -36,11 +33,7 @@ const Sql = {
 
 const create = async (creatorId, description) => {
   try {
-    const { id } = await db.one(Sql.CREATE, [
-      creatorId,
-      description || "placeholder",
-      1,
-    ]);
+    const { id } = await db.one(Sql.CREATE, [creatorId, description || "placeholder", 1]);
 
     if (description === undefined || description.length === 0) {
       await db.none(Sql.UPDATE_DESCRIPTION, [`Game ${id}`, id]);
@@ -91,8 +84,9 @@ const get = async (gameId) => {
   };
 };
 
-const available = async (game_id_start = 0, limit = 10, offset = 0) => {
+const available = async (user_id, game_id_start = 0, limit = 10, offset = 0) => {
   const games = await db.any(Sql.GET_AVAILABLE, {
+    user_id,
     game_id_start,
     limit,
     offset,
@@ -112,10 +106,9 @@ const join = async (gameId, userId) => {
 const initialize = async (gameId, creatorId) => {
   const deck = await db.any(Sql.SHUFFLED_DECK);
 
-  const columns = new pgp.helpers.ColumnSet(
-    ["user_id", "game_id", "card_id", "card_order"],
-    { table: "game_cards" },
-  );
+  const columns = new pgp.helpers.ColumnSet(["user_id", "game_id", "card_id", "card_order"], {
+    table: "game_cards",
+  });
   const values = deck.map(({ id }, index) => ({
     user_id: index % 2 === 0 ? creatorId : -1,
     game_id: gameId,
