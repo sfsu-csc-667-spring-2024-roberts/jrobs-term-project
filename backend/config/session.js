@@ -9,7 +9,7 @@ export default function getSession() {
       store: new (connectPgSimple(session))({ createTableIfMissing: true }),
       secret: process.env.SESSION_SECRET,
       resave: true,
-      saveUninitialized: true,
+      saveUninitialized: false,
       secure: process.env.NODE_ENV === "production",
     });
   }

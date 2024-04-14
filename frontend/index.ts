@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
+import { io } from "socket.io-client";
 
-console.log(dayjs().format("MMMM YYYY"));
-console.log("Updating; site should refresh and print this");
+const socket = io();

@@ -33,10 +33,13 @@
     "morgan": "^1.10.0",
     "node-pg-migrate": "^6.2.2",
     "pg": "^8.11.5",
-    "pg-promise": "^11.5.5"
+    "pg-promise": "^11.5.5",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.7",
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "concurrently": "^8.2.2",
     "connect-livereload": "^0.6.1",
     "esbuild": "^0.20.2",
@@ -46,6 +49,7 @@
     "nodemon": "^3.1.0",
     "prettier": "^3.2.5",
     "prettier-plugin-ejs": "^1.0.3",
+    "prettier-plugin-sort-json": "^4.0.0",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.3"
   },
@@ -54,8 +58,16 @@
   },
   "prettier": {
     "semi": true,
+    "printWidth": 100,
     "plugins": [
-      "prettier-plugin-ejs"
-    ]
+      "prettier-plugin-ejs",
+      "prettier-plugin-sort-json",
+      "@trivago/prettier-plugin-sort-imports"
+    ],
+    "importOrderSeparation": true,
+    "importOrder": [
+      "^[./]"
+    ],
+    "importOrderSortSpecifiers": true
   }
 }

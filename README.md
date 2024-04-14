@@ -1,5 +1,114 @@
 # Term Project Example
 
+## Socket setup
+
+<details>
+  <summary>Installing Socket.IO</summary>
+
+### Installing socket.io
+
+With much of the game logic set up, we can now add [socket.io](https://socket.io/).
+
+```
+npm install socket.io socket.io-client
+```
+
+#### Backend setup
+
+We need to change the setup of the express app a little in [`server.js`](/backend/server.js) to share the same http server between the express application and socket.io. Where before we created an instance of an express application, and used that instance to listen for requests, we will now first create an http server, and share that server instance between the express app and the socket io server. In addition, we need to share the session middleware between the express app and the socket server.
+
+```js
+const app = express();
+
+const server = createServer(app);
+const io = new Server(server);
+initialize(io);
+// Make the io object accessible to the routes
+app.set("io", io);
+
+// Share the session middleware
+const sessionMiddleware = configure.session();
+app.use(sessionMiddleware);
+io.engine.use(sessionMiddleware);
+
+// Change to listen
+// app.listen(PORT, () => {
+server.listen(PORT, () => {
+  // etc.
+});
+```
+
+To keep my code organized, I added a new directory: `backend/sockets`, and an `initialize` method in [`backend/sockets/initialize.js`](/backend/sockets/initialize.js) (note that this is the `initialize` method we see imported in the last code snippet):
+
+```js
+import { Server } from "socket.io";
+
+const bindToSession = (socket) => {
+  const { request } = socket;
+
+  socket.join(request.session.id);
+
+  socket.use((_, next) => {
+    request.session.reload((error) => {
+      if (error) {
+        socket.disconnect();
+      } else {
+        next();
+      }
+    });
+  });
+};
+
+export default function initialize(server) {
+  const io = new Server(server);
+
+  io.on("connection", (socket) => {
+    bindToSession(socket);
+
+    console.log(`a user connected with session id ${socket.request.session.id}`);
+
+    socket.on("disconnect", () => {
+      console.log(`user disconnected with session id ${socket.request.session.id}`);
+    });
+  });
+
+  return io;
+}
+```
+
+The `initialize` function creates and returns the socket.io server. Since _no websocket requests should be coming from the client_, this should be sufficient for the server side socket setup (listening for the connection and disconnection events). The `bindToSession` function takes the socket instance, and calls the `join` method with the user's session id - this creates a specific channel that only that user will receive messages on, named using the user's session id. The middleware in `bindToSession` ensures that the session is correctly reloaded every time a user disconnects and reconnects.
+
+#### Frontend setup
+
+There are a few different ways we can include the necessary client code, but since we have build tooling set up, I have chosen to use npm to install the `socket.io-client` package (installed above). We can finally make use of the [`frontend/index.ts`](/frontend/index.ts) to test the connection:
+
+```ts
+import { io } from "socket.io-client";
+
+const socket = io();
+```
+
+Visit your site. You should now see the output specified in the socket initialization function (either `a user connected` or `user disconnected`).
+
+In the shell where the server is running, I now see a message like:
+
+```
+[dev:serve] a user connected with session id zHItdEDeMiviGFyQPkdgH4G13PaNctU6
+```
+
+If we peek at the session table:
+
+```
+> select * from session order by expire desc;
++----------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+
+| sid                              | sess                                                                                                                                                                                                        | expire              |
+|----------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------|
+| zHItdEDeMiviGFyQPkdgH4G13PaNctU6 | {"cookie":{"originalMaxAge":null,"expires":null,"httpOnly":true,"path":"/"},"user":{"id":1,"email":"roberts.john@gmail.com","gravatar":"7c795287fa483b5c1f6a4345a47d88a0d50f4350e755b933509be9f0c8297fb7"}} | 2024-04-15 10:51:11 |
++----------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+
+```
+
+</details>
+
 ## Game setup
 
 <details>
@@ -100,19 +209,13 @@ import db, { pgp } from "../connection.js";
 
 const Sql = {
   /* existing queries */
-  SHUFFLED_DECK:
-    "SELECT *, random() AS rand FROM standard_deck_cards ORDER BY rand",
-  ASSIGN_CARDS:
-    "UPDATE game_cards SET user_id=$1 WHERE game_id=$2 AND user_id=-1",
+  SHUFFLED_DECK: "SELECT *, random() AS rand FROM standard_deck_cards ORDER BY rand",
+  ASSIGN_CARDS: "UPDATE game_cards SET user_id=$1 WHERE game_id=$2 AND user_id=-1",
 };
 
 const create = async (creatorId, description) => {
   try {
-    const { id } = await db.one(Sql.CREATE, [
-      creatorId,
-      description || "placeholder",
-      1,
-    ]);
+    const { id } = await db.one(Sql.CREATE, [creatorId, description || "placeholder", 1]);
 
     if (description === undefined || description.length === 0) {
       await db.none(Sql.UPDATE_DESCRIPTION, [`Game ${id}`, id]);
@@ -142,10 +245,9 @@ const join = async (gameId, userId) => {
 const initialize = async (gameId, creatorId) => {
   const deck = await db.any(Sql.SHUFFLED_DECK);
 
-  const columns = new pgp.helpers.ColumnSet(
-    ["user_id", "game_id", "card_id", "card_order"],
-    { table: "game_cards" },
-  );
+  const columns = new pgp.helpers.ColumnSet(["user_id", "game_id", "card_id", "card_order"], {
+    table: "game_cards",
+  });
   const values = deck.map(({ id }, index) => ({
     user_id: index % 2 === 0 ? creatorId : -1,
     game_id: gameId,
@@ -332,18 +434,14 @@ In [`backend/db/users/index.js`](/backend/db/users/index.js)
 import db from "../connection.js";
 
 const Sql = {
-  CREATE:
-    "INSERT INTO games (creator_id, description) VALUES ($1, $2) RETURNING id",
+  CREATE: "INSERT INTO games (creator_id, description) VALUES ($1, $2) RETURNING id",
   UPDATE_DESCRIPTION: "UPDATE games SET description=$1 WHERE id=$2",
   ADD_PLAYER: "INSERT INTO game_users (game_id, user_id) VALUES ($1, $2)",
 };
 
 const create = async (creatorId, description) => {
   try {
-    const { id } = await db.one(Sql.CREATE, [
-      creatorId,
-      description || "placeholder",
-    ]);
+    const { id } = await db.one(Sql.CREATE, [creatorId, description || "placeholder"]);
 
     if (description === undefined) {
       await db.none(Sql.UPDATE_DESCRIPTION, [`Game ${id}`, id]);
@@ -434,10 +532,10 @@ Now, all of the game data that is returned can be used in the template. Check ou
 
 ```json
 {
-  "id": 11,
   "created_at": "2024-04-05T23:21:43.966Z",
   "creator_id": 5,
   "description": "My super fun game",
+  "id": 11,
   "users": [
     {
       "id": 5,
@@ -466,15 +564,10 @@ We will frequently need user information in our templates. In this example, I wi
 import { createHash } from "crypto";
 
 export default function (request, response, next) {
-  if (
-    request.session.user !== undefined &&
-    request.session.user.id !== undefined
-  ) {
+  if (request.session.user !== undefined && request.session.user.id !== undefined) {
     response.locals.user = {
       ...request.session.user,
-      hash: createHash("sha256")
-        .update(request.session.user.email)
-        .digest("hex"),
+      hash: createHash("sha256").update(request.session.user.email).digest("hex"),
     };
 
     next();
@@ -580,8 +673,7 @@ We can now hook up the logic for user creation with the registration form. This 
 import db from "../connection.js";
 
 const Sql = {
-  INSERT:
-    "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email",
+  INSERT: "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email",
   EXISTS: "SELECT id FROM users WHERE email=$1",
   // Note that this is ONLY for use in our backend (since it returns the password)
   FIND: "SELECT * FROM users WHERE email=$1 AND password=$2",
@@ -636,6 +728,7 @@ To keep my route file concise, I added a module to handle the password related f
 
 ```js
 import bcrypt from "bcrypt";
+
 import { Users } from "../../db/index.js";
 
 const SALT_ROUNDS = 10;
@@ -667,10 +760,7 @@ With all of this logic in place, the [`backend/middleware/is-authenticated.js`](
 
 ```js
 export default function (request, response, next) {
-  if (
-    request.session.user !== undefined &&
-    request.session.user.id !== undefined
-  ) {
+  if (request.session.user !== undefined && request.session.user.id !== undefined) {
     next();
   } else {
     response.redirect("/");
