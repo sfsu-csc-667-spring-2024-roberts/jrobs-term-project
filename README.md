@@ -1,6 +1,147 @@
 # Term Project Example
 
-## Socket setup
+## Socket setup & lobby dynamic behavior
+
+<details>
+  <summary>Updating available games</summary>
+
+### Updating available games
+
+Now that we have sockets set up, we can start to add more dynamic behavior to our application. In this section, we will update the list of available games whenever a new game is created, or when a game is no longer available to join. A new message handler will be added to the frontend that will receive a new message (defined in our [`backend/sockets/constants.js`](/backend/sockets/constants.js) file), and update the lobby.
+
+```ts
+// Adding new message constants in backend/sockets/constants.js
+export const CHAT_MESSAGE = "chat:message";
+export const GAME_CREATED = "game:created";
+export const GAME_REMOVED = "game:removed";
+```
+
+```ts
+// Game created message handler in frontend/messages/game-created.ts
+import { Socket } from "socket.io-client";
+
+import { GAME_CREATED } from "../../backend/sockets/constants";
+
+export default function handle(socket: Socket) {
+  const gamesList = document.querySelector<HTMLElement>("#available-games-list");
+  const availableGameTemplate = document.querySelector<HTMLTemplateElement>(
+    "#available-game-template",
+  );
+
+  socket.on(
+    GAME_CREATED,
+    ({
+      gameId,
+      creatorEmail,
+      creatorGravatar,
+      description,
+    }: {
+      gameId: number;
+      creatorEmail: string;
+      creatorGravatar: string;
+      description: string;
+    }) => {
+      if (gamesList === null || availableGameTemplate === null) {
+        console.error("Games list or template not found");
+        return;
+      }
+
+      const newGameElement = availableGameTemplate.content.cloneNode(true) as HTMLElement;
+      const liElement = newGameElement.querySelector<HTMLElement>("li");
+      console.log(liElement);
+      liElement!.dataset.gameId = gameId.toString();
+
+      const img = newGameElement.querySelector<HTMLImageElement>("img");
+      img!.src = `https://gravatar.com/avatar/${creatorGravatar}`;
+      img!.alt = `${creatorEmail.substring(0, creatorEmail.indexOf("@"))}'s gravatar`;
+
+      const descriptionElement = newGameElement.querySelector<HTMLElement>(".game-description");
+      descriptionElement!.textContent = description;
+
+      const joinForm = newGameElement.querySelector<HTMLFormElement>("form");
+      joinForm!.action = `/games/join/${gameId}`;
+
+      gamesList.appendChild(newGameElement);
+    },
+  );
+}
+```
+
+```ts
+// Game removed message handler in frontend/messages/game-removed.ts
+import { Socket } from "socket.io-client";
+
+import { GAME_REMOVED } from "../../backend/sockets/constants";
+
+const gamesList = document.querySelector<HTMLElement>("#available-games-list");
+
+export default function handle(socket: Socket) {
+  socket.on(GAME_REMOVED, ({ gameId }: { gameId: number }) => {
+    const gameElement = document.querySelector<HTMLElement>(`[data-game-id="${gameId}"]`);
+
+    if (gamesList === null || gameElement === null) {
+      console.error("Games list or game element not found");
+      return;
+    }
+
+    gamesList.removeChild(gameElement);
+  });
+}
+```
+
+```ts
+// Adding the new handlers into our handler array in frontend/messages/index.ts
+import { default as chatMessageHandler } from "./chat-message";
+import { default as gameCreatedHandler } from "./game-created";
+import { default as gameRemovedHandler } from "./game-removed";
+
+export default [chatMessageHandler, gameRemovedHandler, gameCreatedHandler];
+```
+
+On the backend, we need to identifiy the appropriate place to send these events to the client. We have a route for creating a game, so we can emit a message to all clients whenever a game is created. Games should be removed whenever the number of players requirement for the game has been met - this happens in the route that handles joining games (both routes are defined in [`backend/routes/games/index.js`](/backend/routes/games/index.js), relevant routes included here for reference):
+
+```ts
+router.post("/create", async (request, response) => {
+  const { id: creatorId, gravatar: creatorGravatar, email: creatorEmail } = request.session.user;
+  const { description } = request.body;
+
+  try {
+    const io = request.app.get("io");
+    const { id, description: finalDescription } = await Games.create(creatorId, description);
+
+    io.emit(GAME_CREATED, {
+      gameId: id,
+      description: finalDescription,
+      creatorGravatar,
+      creatorEmail,
+    });
+
+    response.redirect(`/games/${id}`);
+  } catch (error) {
+    // If we were nice we would provide the user with an error message
+    response.redirect("/lobby");
+  }
+});
+
+router.post("/join/:id", async (request, response) => {
+  const { id: gameId } = request.params;
+  const { id: userId } = request.session.user;
+
+  try {
+    const io = request.app.get("io");
+    await Games.join(gameId, userId);
+
+    io.emit(GAME_REMOVED, { gameId });
+
+    response.redirect(`/games/${gameId}`);
+  } catch (error) {
+    console.log(error);
+    response.redirect("/lobby");
+  }
+});
+```
+
+</details>
 
 <details>
   <summary>Sending messages from server to client (setting up lobby chat)</summary>

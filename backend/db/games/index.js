@@ -2,7 +2,7 @@ import db, { pgp } from "../connection.js";
 
 const Sql = {
   CREATE: "INSERT INTO games (creator_id, description) VALUES ($1, $2) RETURNING id",
-  UPDATE_DESCRIPTION: "UPDATE games SET description=$1 WHERE id=$2",
+  UPDATE_DESCRIPTION: "UPDATE games SET description=$1 WHERE id=$2 RETURNING description",
   ADD_PLAYER: "INSERT INTO game_users (game_id, user_id, seat) VALUES ($1, $2, $3)",
   IS_PLAYER_IN_GAME:
     "SELECT * FROM game_users WHERE game_users.game_id=$1 AND game_users.user_id=$2",
@@ -31,19 +31,24 @@ const Sql = {
     ORDER BY game_cards.card_order`,
 };
 
-const create = async (creatorId, description) => {
+const create = async (creatorId, gameDescription) => {
   try {
-    const { id } = await db.one(Sql.CREATE, [creatorId, description || "placeholder", 1]);
+    const { id, description } = await db.one(Sql.CREATE, [
+      creatorId,
+      gameDescription || "placeholder",
+      1,
+    ]);
 
-    if (description === undefined || description.length === 0) {
-      await db.none(Sql.UPDATE_DESCRIPTION, [`Game ${id}`, id]);
+    let finalDescription = description;
+    if (gameDescription === undefined || gameDescription.length === 0) {
+      finalDescription = (await db.one(Sql.UPDATE_DESCRIPTION, [`Game ${id}`, id])).description;
     }
 
     await db.none(Sql.ADD_PLAYER, [id, creatorId, 1]);
 
     await initialize(id, creatorId);
 
-    return id;
+    return { id, description: finalDescription };
   } catch (error) {
     console.error(error);
     throw error;
